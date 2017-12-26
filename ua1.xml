@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
     <account username="alumno1@urjc.es" passwd="alumno1" />
-    <uaserver ip="127.0.0.1" puerto="3001" />
-    <rtpaudio puerto="4001" />
-    <regproxy ip="127.0.0.1" puerto="5001"/>
+    <uaserver ip="127.0.0.1" port="3001" />
+    <rtpaudio port="4001" />
+    <regproxy ip="127.0.0.1" port="5001"/>
     <log path="log.txt" />
     <audio path="cancion.mp3" />
 </config>

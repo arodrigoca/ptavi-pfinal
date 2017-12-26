@@ -7,9 +7,13 @@ import sys
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 
-tags = ['account', 'uaserver', 'rtpaudio', 'regproxy', 'log', 'audio']
-
-
+tags = {'account':['username', 'passwd'],
+'uaserver':['ip', 'port'],
+'rtpaudio':['port'],
+'regproxy':['ip', 'port'],
+'log':['path'],
+'audio':['path']
+}
 
 
 def doClient(server_addr, sipmsg):
@@ -47,10 +51,18 @@ class handleXML(ContentHandler):
 
     def startElement(self, name, attrs):
 
+        attlist = []
+
+        if name != 'config':
+            for attrib in tags[name]:
+
+                toAppend = attrs.get(attrib, '')
+                attlist.append(toAppend)
+                print(toAppend)
+                self.XML[name] = attlist
 
 
-
-    def get_tags(self, file):
+    def get_tags(self):
 
         tags = self.XML
         return tags
@@ -72,3 +84,5 @@ if __name__ == "__main__":
     cHandler = handleXML()
     parser.setContentHandler(cHandler)
     parser.parse(open(config_file))
+    config_data = cHandler.get_tags()
+    print(config_data)
