@@ -23,7 +23,8 @@ sipmethods = ['REGISTER',
 
 sipresponses = ['100',
 '190',
-'200'
+'200',
+'400'
 ]
 
 def composeSipMsg(method, config_data, options):
@@ -39,6 +40,16 @@ def composeSipMsg(method, config_data, options):
         + ' ' + "SIP/2.0\r\n" + 'Expires: ' + options
 
     elif method == 'INVITE':
+        sipmsg = method + " " + "sip:" + options + ' ' + "SIP/2.0\r\n" \
+        + 'Content-Type: application/sdp\r\n\r\n' \
+        + 'v=0\r\n' \
+        + 'o=' + config_data['account']['username'] + ' ' \
+        + config_data['uaserver']['ip'] + '\r\n' \
+        + 's=mysession\r\n' \
+        + 't=0\r\n' \
+        + 'm=audio ' + config_data['rtpaudio']['port'] + ' ' + 'RTP'
+
+    elif method == 'BYE':
         sipmsg = method + " " + "sip:" + options + ' ' + "SIP/2.0\r\n"
 
     return sipmsg
@@ -61,9 +72,12 @@ def doClient(config_data, sip_method, option):
                 data = my_socket.recv(1024)
                 if data:
                     print('received -- ', data.decode('utf-8'))
-                    okline = 'a'
+                    okline = 'SIP/2.0 401 Unauthorized'
                     if data.decode() == okline:
-                        LINE = composeSipMsg('ACK', server_addr)
+                        option = '3600\r\n' \
+                        + 'Authorization: Digest \
+                         response="123123212312321212123"'
+                        LINE = composeSipMsg('INVITE', config_data, option)
                         my_socket.send(bytes(LINE, 'utf-8'))
                     break
 
