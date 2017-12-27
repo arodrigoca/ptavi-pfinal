@@ -26,18 +26,24 @@ sipresponses = ['100',
 '200'
 ]
 
-def composeSipMsg(method, address):
+def composeSipMsg(method, config_data, options):
     """composeSipMsg creates a good formatted SIP message.
 
     Arguments needed are (method, address)
 
     """
-    sipmsg = method + " " + "sip:" + address[2] + '@' + address[0] \
-        + ' ' + "SIP/2.0\r\n\r\n"
+
+    if method == 'REGISTER':
+        sipmsg = method + " " + "sip:" + config_data['account']['username'] \
+        + ':' + config_data['uaserver']['port'] \
+        + ' ' + "SIP/2.0\r\n" + 'Expires: ' + options
+
+    elif method == 'INVITE':
+        sipmsg = method + " " + "sip:" + options + ' ' + "SIP/2.0\r\n"
 
     return sipmsg
 
-def doClient(config_data, sip_method):
+def doClient(config_data, sip_method, option):
     """Main function of the program. It does server-client communication.
 
     Arguments needed are (server_addr, sipmsg)
@@ -48,7 +54,7 @@ def doClient(config_data, sip_method):
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             my_socket.connect((config_data['regproxy']['ip'],
             int(config_data['regproxy']['port'])))
-            LINE = composeSipMsg()
+            LINE = composeSipMsg(sip_method, config_data, option)
             print("Sending: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8'))
             while True:
@@ -106,4 +112,4 @@ if __name__ == "__main__":
     parser.parse(open(config_file))
     config_data = cHandler.get_tags()
     print(config_data)
-    doClient(config_data, sip_method)
+    doClient(config_data, sip_method, option)
