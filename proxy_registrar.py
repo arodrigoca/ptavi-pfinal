@@ -1,123 +1,173 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""SIP/UDP/RTP server."""
+"""Main class and program for a simple SIP server."""
 
 import socketserver
+import json
+import time
+import sched
+import _thread
 import sys
-import os
+from xml.sax import make_parser
+from xml.sax.handler import ContentHandler
+from uaclient import handleXML
+
+scheduler = sched.scheduler(time.time, time.sleep)
+
+tags = {'server': ['servername', 'ip', 'port'],
+'database': ['users', 'passwords'],
+'log': ['path']
+}
 
 
-def composeSipAnswer(method, address):
-    """composeSipAnswer builds a SIP message with correct format.
+def deleteUser(usersDict, user):
+    """DeleteUser method deletes an user from the dictionary.
 
-    arguments needed are (method, address)
-
-    """
-    sipmsg = method
-
-    return sipmsg
-
-
-def sendSong(song):
-    """sendSong calls command to be executed by shell.
-
-    arguments needed are (song_name)
+    Arguments needed are (dictionary, userToDelete).
 
     """
-    command = './mp32rtp -i 127.0.0.1 -p 23032 < ' + song
-    print(command)
-    os.system(command)
+    try:
+        del usersDict[user]
+        print("User", user, "deleted", "because its entry expired")
+        SIPRegisterHandler.register2json(usersDict)
+
+    except KeyError:
+        print("No entry for", user)
 
 
-def checkClientMessage(msg):
-    """checkClientMessage checks if received message is correct formatted.
+def schedDelete(usersDict, user):
+    """schedDelete method schedules an user deletion when his expire time arrives.
 
-    arguments needed are (msg)
+    Arguments needed are (dictionary, userToDelete).
 
     """
-    sipPart = msg[msg.find(' ')+1:]
-    sipPart = [sipPart[:sipPart.find(':')+1],
-               sipPart[sipPart.find(':')+1:sipPart.find('@')],
-               sipPart[sipPart.find('@'):sipPart.find('@')+1],
-               sipPart[sipPart.find('@')+1:sipPart.find(' ')],
-               sipPart[sipPart.find(' ')+1:]]
-    msg = msg.split(' ')
-    if sipPart[0] == 'sip:' and sipPart[2] == '@'\
-            and sipPart[4] == 'SIP/2.0\r\n\r\n':
-        if msg[0] == 'INVITE' or msg[0] == 'ACK' or msg[0] == 'BYE':
-            msgInfo = ['OK', msg[0]]
-            return msgInfo
+    try:
+        scheduler.enterabs(usersDict[user]["fromEpoch"], 1, deleteUser,
+                           (usersDict, user))
+        scheduler.run()
+    except KeyError:
+        pass
 
-        else:
-            msgInfo = ['METHOD NOT ALLOWED', msg[0]]
-            return msgInfo
 
+def registerUser(stringInfo, usersDict, handler):
+    """registerUser method manages user registration and deletion.
+
+    Arguments needed are (stringReceived, dictionary).
+
+    This method also contains a thread call. For each user in your user
+    dictionary, it call the second thread and schedules an user deletion
+    with schedDelete function.
+
+    """
+    addrStart = stringInfo[1].find(":") + 1
+    addrEnd = stringInfo[1].rfind(':')
+    user = stringInfo[1][addrStart:addrEnd]
+    expire_time = time.strftime('%Y-%m-%d %H:%M:%S',
+                                time.gmtime(time.time() + int(stringInfo[3])))
+
+    tagsDictionary = {"address": handler.client_address,
+                      "expires": expire_time,
+                      "fromEpoch": time.time() + int(stringInfo[3]),
+                      "registered": time.time()}
+
+    usersDict[user] = tagsDictionary
+    if int(stringInfo[3]) == 0:
+        deleteUser(usersDict, user)
     else:
-        msgInfo = ['BAD REQUEST', msg[0]]
-        return msgInfo
+        print("client", user, "registered", "for",
+              int(stringInfo[3]), "seconds")
+
+    _thread.start_new_thread(schedDelete, (usersDict, user))
+    SIPRegisterHandler.register2json(usersDict)
 
 
-class EchoHandler(socketserver.DatagramRequestHandler):
+def fordwardInvite(stringInfo, usersDict):
+
+    addrStart = stringInfo[1].find(":") + 1
+    user = stringInfo[1][addrStart:]
+    try:
+        ip = usersDict[user]['address'][0]
+        port = usersDict[user]['address'][1]
+
+    except KeyError:
+        print('user not found in database')
+
+
+class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     """Echo server class."""
 
+    usersDict = {}
+
     def handle(self):
-        """handle do all the things relates do communication."""
-        print('Replying to', self.client_address)
-        while 1:
+        """Handle method of the server class.
 
-            line = self.rfile.read()
-            if line:
-                print("user sent " + line.decode('utf-8'))
-                checkClientMessage(line.decode('utf-8'))
-                if checkClientMessage(line.decode('utf-8'))[0] == 'OK':
+        (all requests will be handled by this method).
 
-                    if checkClientMessage(line.decode('utf-8'))[1] == 'ACK':
-                        sendSong(sys.argv[3])
+        """
+        stringMsg = self.rfile.read().decode('utf-8')
+        stringInfo = stringMsg.split(" ")
+        try:
+            if stringInfo[0] == 'REGISTER':
+                registerUser(stringInfo, SIPRegisterHandler.usersDict)
+                self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
-                    elif checkClientMessage(line.decode('utf-8'))[1] == 'BYE':
-                        LINE = (composeSipAnswer('SIP/2.0 200 OK',
-                                self.client_address) + '\r\n\r\n').encode()
-                        self.wfile.write(LINE)
+            elif stringInfo[0] == 'INVITE':
+                fordwardInvite(stringInfo, SIPRegisterHandler.usersDict, socket)
+                self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
-                    else:
-                        print('METHOD ALLOWED')
-                        LINE = (composeSipAnswer('SIP/2.0 100 Trying',
-                                self.client_address) + '\r\n\r\n').encode()
-                        self.wfile.write(LINE)
-                        LINE = (composeSipAnswer('SIP/2.0 180 Ringing',
-                                self.client_address) + '\r\n\r\n').encode()
-                        self.wfile.write(LINE)
-                        LINE = (composeSipAnswer('SIP/2.0 200 OK',
-                                self.client_address) + '\r\n\r\n').encode()
-                        self.wfile.write(LINE)
+            else:
+                self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
+        except Exception as e:
+                self.wfile.write(b"SIP/2.0 500 Server Internal Error\r\n\r\n")
+                print("Server error:", e)
 
-                elif checkClientMessage(line.decode('utf-8'))[0]\
-                        == 'METHOD NOT ALLOWED':
-                    print('METHOD NOT ALLOWED')
-                    LINE = (composeSipAnswer('405 METHOD NOT ALLOWED',
-                            self.client_address) + '\r\n').encode()
-                    self.wfile.write(LINE)
+    @classmethod
+    def register2json(self, usersDict):
+        """register2json method prints user dictionary to json file.
 
-                else:
-                    print('BAD REQUEST')
-                    LINE = (composeSipAnswer('400 BAD REQUEST',
-                            self.client_address) + '\r\n').encode()
-                    self.wfile.write(LINE)
-            # Si no hay más líneas salimos del bucle infinito
-            if not line:
-                break
+        Arguments needed are (dictionary).
+
+        """
+        fileName = "registered.json"
+        with open(fileName, "w+") as f:
+            json.dump(usersDict, f, sort_keys=True, indent=4)
+
+    @classmethod
+    def json2registered(self):
+        """json2registered method reads a json file and saves its content.
+
+        Arguments needed are ().
+
+        """
+        try:
+            with open("registered.json", "r+") as f:
+                # print("Reading json file")
+                initDict = json.load(f)
+                self.usersDict = initDict
+                for user in self.usersDict:
+                    _thread.start_new_thread(schedDelete,
+                                             (self.usersDict, user))
+        except FileNotFoundError:
+            print("json file not found")
 
 
 if __name__ == "__main__":
-    # Creamos servidor de eco y escuchamos
+    # Listens at localhost ('') port 6001
+    # and calls the EchoHandler class to manage the request
+
     try:
-        serv = socketserver.UDPServer((sys.argv[1],
-                                      int(sys.argv[2])), EchoHandler)
-        print("Listening..." + '\r\n')
+        config_file = sys.argv[1]
+        parser = make_parser()
+        cHandler = handleXML(tags)
+        parser.setContentHandler(cHandler)
+        parser.parse(open(config_file))
+        config_data = cHandler.get_tags()
+
+        serv = socketserver.UDPServer(('', int(config_data['server']['port'])),
+                                      SIPRegisterHandler)
+        SIPRegisterHandler.json2registered()
+        print("Server " + config_data['server']['servername']
+        + ' listening at port ' + config_data['server']['port'])
         serv.serve_forever()
-
-    except KeyboardInterrupt:
-            sys.exit('Exiting')
-
-    except IndexError:
-            sys.exit('Usage: python3 server.py IP port audio_file')
+    except(KeyboardInterrupt, IndexError):
+        print("Usage: python proxy_registrar.py config")

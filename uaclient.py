@@ -86,16 +86,17 @@ def doClient(config_data, sip_method, option):
 
 class handleXML(ContentHandler):
 
-    def __init__(self):
+    def __init__(self, tags):
 
         self.XML = {}
+        self.tags = tags
 
     def startElement(self, name, attrs):
 
         attdict = {}
 
         if name != 'config':
-            for attrib in tags[name]:
+            for attrib in self.tags[name]:
 
                 toAppend = attrs.get(attrib, '')
                 attdict[attrib] = toAppend
@@ -121,9 +122,8 @@ if __name__ == "__main__":
 
 
     parser = make_parser()
-    cHandler = handleXML()
+    cHandler = handleXML(tags)
     parser.setContentHandler(cHandler)
     parser.parse(open(config_file))
     config_data = cHandler.get_tags()
-    print(config_data)
     doClient(config_data, sip_method, option)
