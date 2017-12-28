@@ -63,6 +63,9 @@ def registerUser(stringInfo, usersDict, handler):
     with schedDelete function.
 
     """
+    clientIP = handler.client_address[0]
+    clientPort = int(stringInfo[1][stringInfo[1].rfind(':')+1:])
+    client_final_address = (clientIP, clientPort)
     addrStart = stringInfo[1].find(":") + 1
     addrEnd = stringInfo[1].rfind(':')
     user = stringInfo[1][addrStart:addrEnd]
@@ -70,7 +73,7 @@ def registerUser(stringInfo, usersDict, handler):
     expire_time = time.strftime('%Y-%m-%d %H:%M:%S',
                                 time.gmtime(time.time() + expire_int))
 
-    tagsDictionary = {"address": handler.client_address,
+    tagsDictionary = {"address": client_final_address,
                       "expires": expire_time,
                       "fromEpoch": time.time() + expire_int,
                       "registered": time.time()}
@@ -99,7 +102,7 @@ def fordwardMessage(stringInfo, usersDict, message):
         my_socket.send(bytes(message, 'utf-8'))
 
     except KeyError:
-        print('user not found in database')
+        print('requested user not found in database')
 
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
@@ -126,8 +129,21 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
             elif stringInfo[0] in requests:
-                fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg)
-                self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+
+                if stringInfo[0] == 'INVITE':
+                    origUser = stringSimplified[4].split('=')[1]
+                    origUser = origUser[:origUser.rfind(' ')]
+                    if origUser in SIPRegisterHandler.usersDict:
+                        print('origin user in in database!')
+                        fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg)
+                        self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+
+                    else:
+                        print('origin user not in database!')
+                        self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
+                else:
+                    fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg)
+                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
             else:
                 self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")

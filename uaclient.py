@@ -81,6 +81,10 @@ def doClient(config_data, sip_method, option):
                     elif data.decode() == 'SIP/2.0 200 OK\r\n\r\n':
                         break
 
+                    else:
+                        print('something happened. Closing')
+                        break
+
         except (socket.gaierror, ConnectionRefusedError):
                 sys.exit('Error: Server not found')
 
