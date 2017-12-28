@@ -66,20 +66,21 @@ def registerUser(stringInfo, usersDict, handler):
     addrStart = stringInfo[1].find(":") + 1
     addrEnd = stringInfo[1].rfind(':')
     user = stringInfo[1][addrStart:addrEnd]
+    expire_int = int(stringInfo[3].split("\r")[0])
     expire_time = time.strftime('%Y-%m-%d %H:%M:%S',
-                                time.gmtime(time.time() + int(stringInfo[3])))
+                                time.gmtime(time.time() + expire_int))
 
     tagsDictionary = {"address": handler.client_address,
                       "expires": expire_time,
-                      "fromEpoch": time.time() + int(stringInfo[3]),
+                      "fromEpoch": time.time() + expire_int,
                       "registered": time.time()}
 
     usersDict[user] = tagsDictionary
-    if int(stringInfo[3]) == 0:
+    if expire_int == 0:
         deleteUser(usersDict, user)
     else:
         print("client", user, "registered", "for",
-              int(stringInfo[3]), "seconds")
+              expire_int, "seconds")
 
     _thread.start_new_thread(schedDelete, (usersDict, user))
     SIPRegisterHandler.register2json(usersDict)
@@ -96,7 +97,6 @@ def fordwardMessage(stringInfo, usersDict, message):
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         my_socket.connect((ip, port))
         my_socket.send(bytes(message, 'utf-8'))
-        print('invite sent to', ip, port)
 
     except KeyError:
         print('user not found in database')
@@ -115,10 +115,15 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         """
         stringMsg = self.rfile.read().decode('utf-8')
         stringInfo = stringMsg.split(" ")
+        stringSimplified = stringMsg.split('\r\n')
         try:
             if stringInfo[0] == 'REGISTER':
-                registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
-                self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+                if 'Digest' not in stringInfo:
+                    self.wfile.write(b"SIP/2.0 401 Unauthorized\r\n\r\n")
+
+                else:
+                    registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
+                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
             elif stringInfo[0] in requests:
                 fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg)

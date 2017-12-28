@@ -72,14 +72,14 @@ def doClient(config_data, sip_method, option):
                 data = my_socket.recv(1024)
                 if data:
                     print('received -- ', data.decode('utf-8'))
-                    okline = 'SIP/2.0 401 Unauthorized'
+                    okline = 'SIP/2.0 401 Unauthorized\r\n\r\n'
                     if data.decode() == okline:
-                        option = '3600\r\n' \
-                        + 'Authorization: Digest \
-                         response="123123212312321212123"'
-                        LINE = composeSipMsg('INVITE', config_data, option)
+                        options = option + '\r\n' \
+                        + 'Authorization: Digest response="123123212312321212123"'
+                        LINE = composeSipMsg('REGISTER', config_data, options)
                         my_socket.send(bytes(LINE, 'utf-8'))
-                    break
+                    elif data.decode() == 'SIP/2.0 200 OK\r\n\r\n':
+                        break
 
         except (socket.gaierror, ConnectionRefusedError):
                 sys.exit('Error: Server not found')
