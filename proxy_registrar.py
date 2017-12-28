@@ -11,6 +11,7 @@ import sys
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 from uaclient import handleXML
+import socket
 
 scheduler = sched.scheduler(time.time, time.sleep)
 
@@ -18,6 +19,9 @@ tags = {'server': ['servername', 'ip', 'port'],
 'database': ['users', 'passwords'],
 'log': ['path']
 }
+
+requests = ['INVITE', 'BYE', 'ACK']
+responses = ['100', '180', '200', '404', '500', '401', '405']
 
 
 def deleteUser(usersDict, user):
@@ -81,13 +85,18 @@ def registerUser(stringInfo, usersDict, handler):
     SIPRegisterHandler.register2json(usersDict)
 
 
-def fordwardInvite(stringInfo, usersDict):
+def fordwardMessage(stringInfo, usersDict, message):
 
     addrStart = stringInfo[1].find(":") + 1
     user = stringInfo[1][addrStart:]
     try:
         ip = usersDict[user]['address'][0]
         port = usersDict[user]['address'][1]
+        my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        my_socket.connect((ip, port))
+        my_socket.send(bytes(message, 'utf-8'))
+        print('invite sent to', ip, port)
 
     except KeyError:
         print('user not found in database')
@@ -108,11 +117,11 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         stringInfo = stringMsg.split(" ")
         try:
             if stringInfo[0] == 'REGISTER':
-                registerUser(stringInfo, SIPRegisterHandler.usersDict)
+                registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
                 self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
-            elif stringInfo[0] == 'INVITE':
-                fordwardInvite(stringInfo, SIPRegisterHandler.usersDict, socket)
+            elif stringInfo[0] in requests:
+                fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg)
                 self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
             else:

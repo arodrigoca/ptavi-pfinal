@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <server servername="proxtrar" ip="127.0.0.1" port="44547" />
+    <database users="registered.json" passwords="passwords.txt" />
+    <log path="serverlog.txt" />
+</config>
