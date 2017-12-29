@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <account username="alumno1@urjc.es" passwd="alumno1" />
-    <uaserver ip="127.0.0.1" port="3001" />
+    <account username="alumno2@urjc.es" passwd="alumno2" />
+    <uaserver ip="127.0.0.1" port="3002" />
     <rtpaudio port="23032" />
     <regproxy ip="127.0.0.1" port="5001"/>
     <log path="log.txt" />

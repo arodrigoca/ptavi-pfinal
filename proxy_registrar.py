@@ -89,17 +89,25 @@ def registerUser(stringInfo, usersDict, handler):
     SIPRegisterHandler.register2json(usersDict)
 
 
-def fordwardMessage(stringInfo, usersDict, message):
+def fordwardMessage(stringInfo, usersDict, message, handler):
 
     addrStart = stringInfo[1].find(":") + 1
     user = stringInfo[1][addrStart:]
     try:
-        ip = usersDict[user]['address'][0]
-        port = usersDict[user]['address'][1]
-        my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        my_socket.connect((ip, port))
-        my_socket.send(bytes(message, 'utf-8'))
+
+            ip = usersDict[user]['address'][0]
+            port = usersDict[user]['address'][1]
+            my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            my_socket.connect((ip, port))
+            my_socket.send(bytes(message, 'utf-8'))
+            if stringInfo[0] != 'ACK':
+                while True:
+                    data = my_socket.recv(1024)
+                    if data:
+                        handler.wfile.write(data)
+                        break
+
 
     except KeyError:
         print('requested user not found in database')
@@ -135,15 +143,12 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     origUser = origUser[:origUser.rfind(' ')]
                     if origUser in SIPRegisterHandler.usersDict:
                         print('origin user in in database!')
-                        fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg)
-                        self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
-
+                        fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self)
                     else:
                         print('origin user not in database!')
                         self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
                 else:
-                    fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg)
-                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+                    fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self)
 
             else:
                 self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")

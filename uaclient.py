@@ -52,6 +52,9 @@ def composeSipMsg(method, config_data, options):
     elif method == 'BYE':
         sipmsg = method + " " + "sip:" + options + ' ' + "SIP/2.0\r\n"
 
+    elif method == 'ACK':
+        sipmsg = method + " " + "sip:" + options + ' ' + "SIP/2.0\r\n"
+
     return sipmsg
 
 def doClient(config_data, sip_method, option):
@@ -65,6 +68,7 @@ def doClient(config_data, sip_method, option):
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             my_socket.connect((config_data['regproxy']['ip'],
             int(config_data['regproxy']['port'])))
+            print(my_socket.getsockname())
             LINE = composeSipMsg(sip_method, config_data, option)
             print("Sending: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8'))
@@ -78,10 +82,16 @@ def doClient(config_data, sip_method, option):
                         + 'Authorization: Digest response="123123212312321212123"'
                         LINE = composeSipMsg('REGISTER', config_data, options)
                         my_socket.send(bytes(LINE, 'utf-8'))
+
+
+
                     elif data.decode() == 'SIP/2.0 200 OK\r\n\r\n':
                         break
+                        pass
 
                     else:
+                        LINE = composeSipMsg('ACK', config_data, option)
+                        my_socket.send(bytes(LINE, 'utf-8'))
                         print('something happened. Closing')
                         break
 

@@ -5,6 +5,26 @@
 import socketserver
 import sys
 import os
+from uaclient import handleXML
+from xml.sax import make_parser
+from xml.sax.handler import ContentHandler
+import socket
+
+tags = {'account':['username', 'passwd'],
+'uaserver':['ip', 'port'],
+'rtpaudio':['port'],
+'regproxy':['ip', 'port'],
+'log':['path'],
+'audio':['path']
+}
+
+config_file = sys.argv[1]
+parser = make_parser()
+cHandler = handleXML(tags)
+parser.setContentHandler(cHandler)
+parser.parse(open(config_file))
+config_data = cHandler.get_tags()
+
 
 
 def composeSipAnswer(method, address):
@@ -42,8 +62,8 @@ def checkClientMessage(msg):
                sipPart[sipPart.find('@')+1:sipPart.find(' ')],
                sipPart[sipPart.find(' ')+1:]]
     msg = msg.split(' ')
-    if sipPart[0] == 'sip:' and sipPart[2] == '@'\
-            and sipPart[4] == 'SIP/2.0\r\n\r\n':
+
+    if sipPart[0] == 'sip:' and sipPart[2] == '@':
         if msg[0] == 'INVITE' or msg[0] == 'ACK' or msg[0] == 'BYE':
             msgInfo = ['OK', msg[0]]
             return msgInfo
@@ -56,23 +76,40 @@ def checkClientMessage(msg):
         msgInfo = ['BAD REQUEST', msg[0]]
         return msgInfo
 
+def SDP():
 
-class EchoHandler(socketserver.DatagramRequestHandler):
+    sipmsg = 'SIP/2.0 200 OK\r\n' \
+    + 'Content-Type: application/sdp\r\n\r\n' \
+    + 'v=0\r\n' \
+    + 'o=' + config_data['account']['username'] + ' ' \
+    + config_data['uaserver']['ip'] + '\r\n' \
+    + 's=mysession\r\n' \
+    + 't=0\r\n' \
+    + 'm=audio ' + config_data['rtpaudio']['port'] + ' ' + 'RTP'
+
+    return sipmsg
+
+
+class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     """Echo server class."""
 
     def handle(self):
         """handle do all the things relates do communication."""
         print('Replying to', self.client_address)
+        my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         while 1:
 
             line = self.rfile.read()
             if line:
+
                 print("user sent " + line.decode('utf-8'))
                 checkClientMessage(line.decode('utf-8'))
                 if checkClientMessage(line.decode('utf-8'))[0] == 'OK':
 
                     if checkClientMessage(line.decode('utf-8'))[1] == 'ACK':
-                        sendSong(sys.argv[3])
+                        #sendSong(sys.argv[3])
+                        print('enviando cancion')
 
                     elif checkClientMessage(line.decode('utf-8'))[1] == 'BYE':
                         LINE = (composeSipAnswer('SIP/2.0 200 OK',
@@ -81,14 +118,15 @@ class EchoHandler(socketserver.DatagramRequestHandler):
 
                     else:
                         print('METHOD ALLOWED')
+
                         LINE = (composeSipAnswer('SIP/2.0 100 Trying',
                                 self.client_address) + '\r\n\r\n').encode()
                         self.wfile.write(LINE)
                         LINE = (composeSipAnswer('SIP/2.0 180 Ringing',
                                 self.client_address) + '\r\n\r\n').encode()
                         self.wfile.write(LINE)
-                        LINE = (composeSipAnswer('SIP/2.0 200 OK',
-                                self.client_address) + '\r\n\r\n').encode()
+                        LINE = SDP().encode()
+                        print(SDP())
                         self.wfile.write(LINE)
 
                 elif checkClientMessage(line.decode('utf-8'))[0]\
@@ -111,8 +149,10 @@ class EchoHandler(socketserver.DatagramRequestHandler):
 if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
     try:
-        serv = socketserver.UDPServer((sys.argv[1],
-                                      int(sys.argv[2])), EchoHandler)
+
+        print(int(config_data['uaserver']['port']))
+        serv = socketserver.UDPServer(('', int(config_data['uaserver']['port'])),
+                                      SIPRegisterHandler)
         print("Listening..." + '\r\n')
         serv.serve_forever()
 
