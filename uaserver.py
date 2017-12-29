@@ -44,7 +44,8 @@ def sendSong(song):
     arguments needed are (song_name)
 
     """
-    command = './mp32rtp -i 127.0.0.1 -p 23032 < ' + song
+    command = './mp32rtp -i ' + receptor_ip + '-p ' + receptor_puerto
+    command += ' < ' + song
     print(command)
     os.system(command)
 
@@ -108,7 +109,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                 if checkClientMessage(line.decode('utf-8'))[0] == 'OK':
 
                     if checkClientMessage(line.decode('utf-8'))[1] == 'ACK':
-                        #sendSong(sys.argv[3])
+                        sendSong(config_data['audio']['path'])
                         print('enviando cancion')
 
                     elif checkClientMessage(line.decode('utf-8'))[1] == 'BYE':
@@ -126,7 +127,6 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                                 self.client_address) + '\r\n\r\n').encode()
                         self.wfile.write(LINE)
                         LINE = SDP().encode()
-                        print(SDP())
                         self.wfile.write(LINE)
 
                 elif checkClientMessage(line.decode('utf-8'))[0]\
