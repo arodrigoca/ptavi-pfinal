@@ -24,6 +24,7 @@ requests = ['INVITE', 'BYE', 'ACK']
 responses = ['100', '180', '200', '404', '500', '401', '405']
 
 
+
 def deleteUser(usersDict, user):
     """DeleteUser method deletes an user from the dictionary.
 

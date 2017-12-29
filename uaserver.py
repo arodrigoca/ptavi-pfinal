@@ -8,7 +8,9 @@ import os
 from uaclient import handleXML
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
+from uaclient import sendSong
 import socket
+import datetime
 
 tags = {'account':['username', 'passwd'],
 'uaserver':['ip', 'port'],
@@ -24,6 +26,11 @@ cHandler = handleXML(tags)
 parser.setContentHandler(cHandler)
 parser.parse(open(config_file))
 config_data = cHandler.get_tags()
+try:
+    logfile = open(config_data['log']['path'], 'a')
+
+except:
+    print('log file not found')
 
 rtpaddress = []
 
@@ -39,19 +46,6 @@ def composeSipAnswer(method, address):
     sipmsg = method
 
     return sipmsg
-
-
-def sendSong(song, receiver_address):
-    """sendSong calls command to be executed by shell.
-
-    arguments needed are (song_name)
-
-    """
-    command = './mp32rtp -i ' + receiver_address[0] \
-    + '-p ' + str(receiver_address[1])
-    command += ' < ' + song
-    print(command)
-    os.system(command)
 
 
 def checkClientMessage(msg):
@@ -130,6 +124,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
                     else:
                         print('METHOD ALLOWED')
+                        logfile.write('INVITE RECEIVED')
                         global rtpaddress
                         rtpip = getRTPaddress(line)[0]
                         rtpport = int(getRTPaddress(line)[1])

@@ -6,6 +6,8 @@ import socket
 import sys
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
+import os
+import datetime
 
 tags = {'account':['username', 'passwd'],
 'uaserver':['ip', 'port'],
@@ -26,6 +28,24 @@ sipresponses = ['100',
 '200',
 '400'
 ]
+
+def logEvent(file, line):
+
+    eventTime = datetime.datetime.today().strftime('%Y%m%d%H%M%S')
+    file.write(eventTime + ' ' + line + '\r\n')
+
+
+def sendSong(song, receiver_address):
+    """sendSong calls command to be executed by shell.
+
+    arguments needed are (song_name)
+
+    """
+    command = './mp32rtp -i ' + receiver_address[0] \
+    + '-p ' + str(receiver_address[1])
+    command += ' < ' + song
+    print(command)
+    os.system(command)
 
 def composeSipMsg(method, config_data, options):
     """composeSipMsg creates a good formatted SIP message.
@@ -62,7 +82,8 @@ def doClient(config_data, sip_method, option):
 
     Arguments needed are (server_addr, sipmsg)
     """
-
+    file = open(config_data['log']['path'], 'a')
+    logEvent(file, 'Starting...')
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         try:
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -72,10 +93,15 @@ def doClient(config_data, sip_method, option):
             LINE = composeSipMsg(sip_method, config_data, option)
             print("Sending: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8'))
+            logEvent(file, 'Sent to ' + config_data['regproxy']['ip'] \
+            + ':' + config_data['regproxy']['port'] + ': ' + LINE)
             while True:
                 data = my_socket.recv(1024)
                 if data:
                     print('received -- ', data.decode('utf-8'))
+                    logEvent(file, 'Received from ' + config_data['regproxy']['ip'] \
+                    + ':' + config_data['regproxy']['port'] + ': ' \
+                     + data.decode())
                     okline = 'SIP/2.0 401 Unauthorized\r\n\r\n'
                     if data.decode() == okline:
                         options = option + '\r\n' \
@@ -106,8 +132,21 @@ def doClient(config_data, sip_method, option):
                             break
 
                     else:
+                        rtpaddress = data.decode()[data.decode().find('o='):]
+                        rtpaddress = rtpaddress[rtpaddress.find(' ')+1:]
+                        rtpaddress = rtpaddress[:rtpaddress.find('\r\n')]
+                        rtpport = data.decode()[data.decode().find('m='):]
+                        rtpport = rtpport[rtpport.find(' ')+1:]
+                        rtpport = rtpport[:rtpport.find('\r\n')]
+                        rtpport = rtpport[:rtpport.rfind(' ')]
+                        rtpaddress = [rtpaddress, rtpport]
                         LINE = composeSipMsg('ACK', config_data, option)
                         my_socket.send(bytes(LINE, 'utf-8'))
+                        logEvent(file, 'Sent to ' + config_data['regproxy']['ip'] \
+                        + ':' + config_data['regproxy']['port'] + ': ' + LINE)
+                        sendSong(config_data['audio']['path'], rtpaddress)
+                        logEvent(file, 'Sent to ' + rtpaddress[0] \
+                        + ':' + rtpaddress[1] + ': ' + 'RTP FILE')
                         print('All OK. Sending ACK and RTP')
                         break
 

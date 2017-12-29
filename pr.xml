@@ -2,5 +2,5 @@
 <config>
     <server servername="proxtrar" ip="127.0.0.1" port="5001" />
     <database users="registered.json" passwords="passwords.txt" />
-    <log path="serverlog.txt" />
+    <log path="prlog.txt" />
 </config>
