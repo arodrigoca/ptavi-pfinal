@@ -146,14 +146,14 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self)
                     else:
                         print('origin user not in database!')
-                        self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
+                        self.wfile.write(b"SIP/2.0 404 User Not Found\r\n\r\n")
                 else:
                     fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self)
 
             else:
-                self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
+                self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
         except Exception as e:
-                self.wfile.write(b"SIP/2.0 500 Server Internal Error\r\n\r\n")
+                self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
                 print("Server error:", e)
 
     @classmethod

@@ -89,10 +89,26 @@ def doClient(config_data, sip_method, option):
                         break
                         pass
 
+                    elif data.decode() == 'SIP/2.0 404 User Not Found\r\n\r\n':
+                            print('User not found')
+                            break
+
+                    elif data.decode() == 'SIP/2.0 405 Method Not Allowed\r\n\r\n':
+                            print('User not found')
+                            break
+
+                    elif data.decode() == 'SIP/2.0 400 Bad Request\r\n\r\n':
+                            print('Bad Request')
+                            break
+
+                    elif data.decode == 'SIP/2.0 500 Server Internal Error\r\n\r\n':
+                            print('Server error')
+                            break
+
                     else:
                         LINE = composeSipMsg('ACK', config_data, option)
                         my_socket.send(bytes(LINE, 'utf-8'))
-                        print('something happened. Closing')
+                        print('All OK. Sending ACK and closing')
                         break
 
         except (socket.gaierror, ConnectionRefusedError):
