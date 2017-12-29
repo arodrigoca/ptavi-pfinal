@@ -108,7 +108,7 @@ def doClient(config_data, sip_method, option):
                     else:
                         LINE = composeSipMsg('ACK', config_data, option)
                         my_socket.send(bytes(LINE, 'utf-8'))
-                        print('All OK. Sending ACK and closing')
+                        print('All OK. Sending ACK and RTP')
                         break
 
         except (socket.gaierror, ConnectionRefusedError):

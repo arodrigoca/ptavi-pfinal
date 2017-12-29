@@ -25,6 +25,9 @@ parser.setContentHandler(cHandler)
 parser.parse(open(config_file))
 config_data = cHandler.get_tags()
 
+rtpaddress = []
+
+
 
 
 def composeSipAnswer(method, address):
@@ -38,13 +41,14 @@ def composeSipAnswer(method, address):
     return sipmsg
 
 
-def sendSong(song):
+def sendSong(song, receiver_address):
     """sendSong calls command to be executed by shell.
 
     arguments needed are (song_name)
 
     """
-    command = './mp32rtp -i ' + receptor_ip + '-p ' + receptor_puerto
+    command = './mp32rtp -i ' + receiver_address[0] \
+    + '-p ' + str(receiver_address[1])
     command += ' < ' + song
     print(command)
     os.system(command)
@@ -90,6 +94,14 @@ def SDP():
 
     return sipmsg
 
+def getRTPaddress(message):
+
+    info = message.decode()
+    info = info.split('\r\n')
+    ip = info[4].split(' ')[1]
+    port = info[7].split(' ')[1]
+    return [ip, port]
+
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     """Echo server class."""
@@ -109,8 +121,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                 if checkClientMessage(line.decode('utf-8'))[0] == 'OK':
 
                     if checkClientMessage(line.decode('utf-8'))[1] == 'ACK':
-                        sendSong(config_data['audio']['path'])
-                        print('enviando cancion')
+                        sendSong(config_data['audio']['path'], rtpaddress)
 
                     elif checkClientMessage(line.decode('utf-8'))[1] == 'BYE':
                         LINE = (composeSipAnswer('SIP/2.0 200 OK',
@@ -119,7 +130,10 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
                     else:
                         print('METHOD ALLOWED')
-
+                        global rtpaddress
+                        rtpip = getRTPaddress(line)[0]
+                        rtpport = int(getRTPaddress(line)[1])
+                        rtpaddress = [rtpip, rtpport]
                         LINE = (composeSipAnswer('SIP/2.0 100 Trying',
                                 self.client_address) + '\r\n\r\n').encode()
                         self.wfile.write(LINE)
@@ -150,7 +164,6 @@ if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
     try:
 
-        print(int(config_data['uaserver']['port']))
         serv = socketserver.UDPServer(('', int(config_data['uaserver']['port'])),
                                       SIPRegisterHandler)
         print("Listening..." + '\r\n')

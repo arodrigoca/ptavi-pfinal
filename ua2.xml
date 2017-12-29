@@ -2,7 +2,7 @@
 <config>
     <account username="alumno2@urjc.es" passwd="alumno2" />
     <uaserver ip="127.0.0.1" port="3002" />
-    <rtpaudio port="23032" />
+    <rtpaudio port="23033" />
     <regproxy ip="127.0.0.1" port="5001"/>
     <log path="log.txt" />
     <audio path="cancion.mp3" />
