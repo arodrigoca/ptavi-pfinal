@@ -11,6 +11,7 @@ import sys
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 from uaclient import handleXML
+from uaclient import logEvent
 import socket
 
 scheduler = sched.scheduler(time.time, time.sleep)

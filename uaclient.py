@@ -31,6 +31,7 @@ sipresponses = ['100',
 
 def logEvent(file, line):
 
+    print('printing to log file')
     eventTime = datetime.datetime.today().strftime('%Y%m%d%H%M%S')
     file.write(eventTime + ' ' + line + '\r\n')
 

@@ -9,6 +9,7 @@ from uaclient import handleXML
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 from uaclient import sendSong
+from uaclient import logEvent
 import socket
 import datetime
 
@@ -27,7 +28,7 @@ parser.setContentHandler(cHandler)
 parser.parse(open(config_file))
 config_data = cHandler.get_tags()
 try:
-    logfile = open(config_data['log']['path'], 'a')
+    file = open(config_data['log']['path'], 'a')
 
 except:
     print('log file not found')
@@ -111,31 +112,54 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
             if line:
 
                 print("user sent " + line.decode('utf-8'))
+                logEvent(file, 'Received from ' \
+                + self.client_address[0] \
+                + ':' + str(self.client_address[1]) + ': ' \
+                + line.decode())
                 checkClientMessage(line.decode('utf-8'))
                 if checkClientMessage(line.decode('utf-8'))[0] == 'OK':
 
                     if checkClientMessage(line.decode('utf-8'))[1] == 'ACK':
+                        logEvent(file, 'Sent to ' \
+                        + rtpaddress[0] \
+                        + ':' + str(rtpaddress[1]) + ': ' \
+                        + 'RTP FILE')
                         sendSong(config_data['audio']['path'], rtpaddress)
 
                     elif checkClientMessage(line.decode('utf-8'))[1] == 'BYE':
                         LINE = (composeSipAnswer('SIP/2.0 200 OK',
                                 self.client_address) + '\r\n\r\n').encode()
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + LINE)
                         self.wfile.write(LINE)
 
                     else:
                         print('METHOD ALLOWED')
-                        logfile.write('INVITE RECEIVED')
                         global rtpaddress
                         rtpip = getRTPaddress(line)[0]
                         rtpport = int(getRTPaddress(line)[1])
                         rtpaddress = [rtpip, rtpport]
                         LINE = (composeSipAnswer('SIP/2.0 100 Trying',
                                 self.client_address) + '\r\n\r\n').encode()
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + LINE.decode())
                         self.wfile.write(LINE)
                         LINE = (composeSipAnswer('SIP/2.0 180 Ringing',
                                 self.client_address) + '\r\n\r\n').encode()
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + LINE.decode())
                         self.wfile.write(LINE)
                         LINE = SDP().encode()
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + LINE.decode())
                         self.wfile.write(LINE)
 
                 elif checkClientMessage(line.decode('utf-8'))[0]\
@@ -143,12 +167,20 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     print('METHOD NOT ALLOWED')
                     LINE = (composeSipAnswer('405 METHOD NOT ALLOWED',
                             self.client_address) + '\r\n').encode()
+                    logEvent(file, 'Sent to ' \
+                    + self.client_address[0] \
+                    + ':' + str(self.client_address[1]) + ': ' \
+                    + LINE.decode())
                     self.wfile.write(LINE)
 
                 else:
                     print('BAD REQUEST')
                     LINE = (composeSipAnswer('400 BAD REQUEST',
                             self.client_address) + '\r\n').encode()
+                    logEvent(file, 'Sent to ' \
+                    + self.client_address[0] \
+                    + ':' + str(self.client_address[1]) + ': ' \
+                    + LINE.decode())
                     self.wfile.write(LINE)
             # Si no hay más líneas salimos del bucle infinito
             if not line:
