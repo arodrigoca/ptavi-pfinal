@@ -132,7 +132,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         logEvent(file, 'Sent to ' \
                         + self.client_address[0] \
                         + ':' + str(self.client_address[1]) + ': ' \
-                        + LINE)
+                        + LINE.decode())
                         self.wfile.write(LINE)
 
                     else:

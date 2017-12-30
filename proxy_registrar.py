@@ -24,6 +24,12 @@ tags = {'server': ['servername', 'ip', 'port'],
 requests = ['INVITE', 'BYE', 'ACK']
 responses = ['100', '180', '200', '404', '500', '401', '405']
 
+config_file = sys.argv[1]
+parser = make_parser()
+cHandler = handleXML(tags)
+parser.setContentHandler(cHandler)
+parser.parse(open(config_file))
+config_data = cHandler.get_tags()
 
 
 def deleteUser(usersDict, user):
@@ -91,7 +97,7 @@ def registerUser(stringInfo, usersDict, handler):
     SIPRegisterHandler.register2json(usersDict)
 
 
-def fordwardMessage(stringInfo, usersDict, message, handler):
+def fordwardMessage(stringInfo, usersDict, message, handler, logfile):
 
     addrStart = stringInfo[1].find(":") + 1
     user = stringInfo[1][addrStart:]
@@ -102,10 +108,18 @@ def fordwardMessage(stringInfo, usersDict, message, handler):
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect((ip, port))
     my_socket.send(bytes(message, 'utf-8'))
+    logEvent(logfile, 'Sent to ' \
+    + ip \
+    + ':' + str(port) + ': ' \
+    + message)
     if stringInfo[0] != 'ACK':
         while True:
             data = my_socket.recv(1024)
             if data:
+                logEvent(logfile, 'Received from ' \
+                + ip \
+                + ':' + str(port) + ': ' \
+                + data.decode())
                 handler.wfile.write(data)
                 break
 
@@ -121,16 +135,36 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         (all requests will be handled by this method).
 
         """
+
         stringMsg = self.rfile.read().decode('utf-8')
         stringInfo = stringMsg.split(" ")
         stringSimplified = stringMsg.split('\r\n')
         try:
+            file = open(config_data['log']['path'], 'a')
+
+        except:
+            sys.exit('Log file not found. Finishing...')
+            self.wfile.write(b'SIP/2.0 500 Server Internal Error')
+
+        logEvent(file, 'Received from ' \
+        + self.client_address[0] \
+        + ':' + str(self.client_address[1]) + ': ' \
+        + stringMsg)
+        try:
             if stringInfo[0] == 'REGISTER':
                 if 'Digest' not in stringInfo:
+                    logEvent(file, 'Sent to ' \
+                    + self.client_address[0] \
+                    + ':' + str(self.client_address[1]) + ': ' \
+                    + "SIP/2.0 401 Unauthorized\r\n\r\n")
                     self.wfile.write(b"SIP/2.0 401 Unauthorized\r\n\r\n")
 
                 else:
                     registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
+                    logEvent(file, 'Sent to ' \
+                    + self.client_address[0] \
+                    + ':' + str(self.client_address[1]) + ': ' \
+                    + "SIP/2.0 200 OK\r\n\r\n")
                     self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
             elif stringInfo[0] in requests:
@@ -141,25 +175,45 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     if origUser in SIPRegisterHandler.usersDict:
                         print('origin user in in database!')
                         try:
-                            fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self)
+                            fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self, file)
 
                         except KeyError:
                             print('Requested user not found in database')
+                            logEvent(file, 'Sent to ' \
+                            + self.client_address[0] \
+                            + ':' + str(self.client_address[1]) + ': ' \
+                            + "SIP/2.0 404 User Not Found\r\n\r\n")
                             self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
 
                     else:
                         print('origin user not in database!')
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + "SIP/2.0 400 Bad Request\r\n\r\n")
                         self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
                 else:
-                    fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self)
+                    fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self, file)
 
             else:
+                logEvent(file, 'Sent to ' \
+                + self.client_address[0] \
+                + ':' + str(self.client_address[1]) + ': ' \
+                + "SIP/2.0 405 Method Not Allowed\r\n\r\n")
                 self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
         except Exception as e:
                 if e == '[Errno 111] Connection refused':
+                    logEvent(file, 'Sent to ' \
+                    + self.client_address[0] \
+                    + ':' + str(self.client_address[1]) + ': ' \
+                    + "SIP/2.0 404 User Not Found\r\n\r\n")
                     self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
 
                 else:
+                    logEvent(file, 'Sent to ' \
+                    + self.client_address[0] \
+                    + ':' + str(self.client_address[1]) + ': ' \
+                    + "SIP/2.0 400 Bad Request\r\n\r\n")
                     self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
                     print("Server error:", e)
 
@@ -198,13 +252,6 @@ if __name__ == "__main__":
     # and calls the EchoHandler class to manage the request
 
     try:
-        config_file = sys.argv[1]
-        parser = make_parser()
-        cHandler = handleXML(tags)
-        parser.setContentHandler(cHandler)
-        parser.parse(open(config_file))
-        config_data = cHandler.get_tags()
-
         serv = socketserver.UDPServer(('', int(config_data['server']['port'])),
                                       SIPRegisterHandler)
         SIPRegisterHandler.json2registered()
