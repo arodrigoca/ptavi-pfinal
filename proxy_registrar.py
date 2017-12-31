@@ -138,10 +138,13 @@ def generateNonce(password):
 
 
 
-def checkPassword(hash_pass, user_pass):
+def checkPassword(hashed_password, user_password):
     password, salt = hashed_password.split(':')
-    return password == hashlib.md5(salt.encode() + user_password.encode()).hexdigest()
+    if password == hashlib.md5(salt.encode() + user_password.encode()).hexdigest():
+        return True
 
+    else:
+        return False
 
 def findUserPassword(user):
 
@@ -164,6 +167,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         """
 
         stringMsg = self.rfile.read().decode('utf-8')
+        print(stringMsg)
         stringInfo = stringMsg.split(" ")
         stringSimplified = stringMsg.split('\r\n')
         notfound = False
@@ -187,10 +191,12 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         user = stringInfo[1][addrStart:addrEnd]
                         userPassword = findUserPassword(user)
                         nonce = generateNonce(userPassword)
-                        print(nonce)
-
                     except Exception as e:
                         print(e)
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + "SIP/2.0 404 User Not Found\r\n\r\n")
                         self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
                         notfound = True
 
@@ -199,15 +205,39 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         + self.client_address[0] \
                         + ':' + str(self.client_address[1]) + ': ' \
                         + "SIP/2.0 401 Unauthorized\r\n\r\n")
-                        self.wfile.write(b"SIP/2.0 401 Unauthorized\r\n\r\n")
+                        self.wfile.write(("SIP/2.0 401 Unauthorized\r\n" \
+                        + 'WWW Authenticate: Digest nonce=' + '"' \
+                        + nonce + '"').encode())
 
                 else:
-                    registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
-                    logEvent(file, 'Sent to ' \
-                    + self.client_address[0] \
-                    + ':' + str(self.client_address[1]) + ': ' \
-                    + "SIP/2.0 200 OK\r\n\r\n")
-                    self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+                    try:
+                        addrStart = stringInfo[1].find(":") + 1
+                        addrEnd = stringInfo[1].rfind(':')
+                        user = stringInfo[1][addrStart:addrEnd]
+                        userPassword = findUserPassword(user)
+                        nonceIndex = stringMsg.find('response=')
+                        hashed_password = stringMsg[nonceIndex+10: \
+                        len(stringMsg)-1]
+                        if checkPassword(hashed_password, userPassword):
+                            print('Authentication correct')
+
+                        else:
+                            print('Authentication incorrect')
+                        
+                        registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + "SIP/2.0 200 OK\r\n\r\n")
+                        self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
+
+                    except Exception as e:
+                        print(e)
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + "SIP/2.0 404 User Not Found\r\n\r\n")
+                        self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
 
             elif stringInfo[0] in requests:
 

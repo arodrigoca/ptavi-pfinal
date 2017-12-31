@@ -8,6 +8,8 @@ from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 import os
 import datetime
+import uuid
+import hashlib
 
 tags = {'account':['username', 'passwd'],
 'uaserver':['ip', 'port'],
@@ -31,7 +33,7 @@ sipresponses = ['100',
 
 def logEvent(file, line):
 
-    print('printing to log file:', line)
+    #print('printing to log file:', line)
     eventTime = datetime.datetime.today().strftime('%Y%m%d%H%M%S')
     file.write(eventTime + ' ' + line + '\r\n')
 
@@ -79,6 +81,13 @@ def composeSipMsg(method, config_data, options):
     return sipmsg
 
 
+def generateNonceResponse(password, nonce):
+
+    salt = uuid.uuid4().hex
+    cnonce = hashlib.md5(salt.encode() + password.encode()).hexdigest() + ':' + salt
+    return hashlib.md5(salt.encode() + password.encode()).hexdigest() + ':' + salt
+
+
 def doClient(config_data, sip_method, option):
     """Main function of the program. It does server-client communication.
 
@@ -91,7 +100,7 @@ def doClient(config_data, sip_method, option):
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             my_socket.connect((config_data['regproxy']['ip'],
             int(config_data['regproxy']['port'])))
-            print(my_socket.getsockname())
+            #print(my_socket.getsockname())
             LINE = composeSipMsg(sip_method, config_data, option)
             print("Sending: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8'))
@@ -104,14 +113,19 @@ def doClient(config_data, sip_method, option):
                     logEvent(file, 'Received from ' + config_data['regproxy']['ip'] \
                     + ':' + config_data['regproxy']['port'] + ': ' \
                      + data.decode())
-                    okline = 'SIP/2.0 401 Unauthorized\r\n\r\n'
-                    if data.decode() == okline:
+                    okline = 'SIP/2.0 401 Unauthorized\r\n'
+                    if okline in data.decode():
+                        nonceIndex = data.decode().find('nonce=')
+                        hashed_password = data.decode()[nonceIndex+7: \
+                        len(data.decode())-1]
+                        nonceResponse = \
+                        generateNonceResponse(config_data['account']['passwd'],
+                        hashed_password)
                         options = option + '\r\n' \
-                        + 'Authorization: Digest response="123123212312321212123"'
+                        + 'Authorization: Digest response="' \
+                        + nonceResponse + '"'
                         LINE = composeSipMsg('REGISTER', config_data, options)
                         my_socket.send(bytes(LINE, 'utf-8'))
-
-
 
                     elif data.decode() == 'SIP/2.0 200 OK\r\n\r\n':
                         break
