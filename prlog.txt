@@ -1,0 +1,65 @@
+20171231145859 Received from 127.0.0.1:47099: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150145 Received from 127.0.0.1:34682: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150230 Received from 127.0.0.1:41352: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150246 Received from 127.0.0.1:41328: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150525 Received from 127.0.0.1:57245: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150525 Sent to 127.0.0.1:57245: SIP/2.0 401 Unauthorized
+
+
+20171231150525 Received from 127.0.0.1:57245: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="123123212312321212123"
+20171231150525 Sent to 127.0.0.1:57245: SIP/2.0 200 OK
+
+
+20171231150548 Received from 127.0.0.1:59593: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150548 Sent to 127.0.0.1:59593: SIP/2.0 401 Unauthorized
+
+
+20171231150548 Received from 127.0.0.1:59593: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="123123212312321212123"
+20171231150548 Sent to 127.0.0.1:59593: SIP/2.0 200 OK
+
+
+20171231150626 Received from 127.0.0.1:43310: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150653 Received from 127.0.0.1:39130: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150653 Sent to 127.0.0.1:39130: SIP/2.0 401 Unauthorized
+
+
+20171231150653 Received from 127.0.0.1:39130: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="123123212312321212123"
+20171231150653 Sent to 127.0.0.1:39130: SIP/2.0 200 OK
+
+
+20171231150836 Received from 127.0.0.1:43094: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150836 Sent to 127.0.0.1:43094: SIP/2.0 401 Unauthorized
+
+
+20171231150836 Received from 127.0.0.1:43094: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="123123212312321212123"
+20171231150836 Sent to 127.0.0.1:43094: SIP/2.0 200 OK
+
+
+20171231150856 Received from 127.0.0.1:57259: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20171231150856 Sent to 127.0.0.1:57259: SIP/2.0 401 Unauthorized
+
+
+20171231150856 Received from 127.0.0.1:57259: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="123123212312321212123"
+20171231150856 Sent to 127.0.0.1:57259: SIP/2.0 200 OK
+
+

@@ -13,6 +13,8 @@ from xml.sax.handler import ContentHandler
 from uaclient import handleXML
 from uaclient import logEvent
 import socket
+import uuid
+import hashlib
 
 scheduler = sched.scheduler(time.time, time.sleep)
 
@@ -30,6 +32,10 @@ cHandler = handleXML(tags)
 parser.setContentHandler(cHandler)
 parser.parse(open(config_file))
 config_data = cHandler.get_tags()
+
+pswds_file = config_data['database']['passwords']
+with open(pswds_file, 'r') as f:
+    pswds_data = f.read().splitlines()
 
 
 def deleteUser(usersDict, user):
@@ -124,6 +130,27 @@ def fordwardMessage(stringInfo, usersDict, message, handler, logfile):
                 break
 
 
+
+def generateNonce(password):
+
+    salt = uuid.uuid4().hex
+    return hashlib.md5(salt.encode() + password.encode()).hexdigest() + ':' + salt
+
+
+
+def checkPassword(hash_pass, user_pass):
+    password, salt = hashed_password.split(':')
+    return password == hashlib.md5(salt.encode() + user_password.encode()).hexdigest()
+
+
+def findUserPassword(user):
+
+    password = [s for s in pswds_data if user in s]
+    password = password[0].split(' ')[1]
+    return password
+    print('USER PASSWORD:', password)
+
+
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     """Echo server class."""
 
@@ -139,6 +166,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         stringMsg = self.rfile.read().decode('utf-8')
         stringInfo = stringMsg.split(" ")
         stringSimplified = stringMsg.split('\r\n')
+        notfound = False
         try:
             file = open(config_data['log']['path'], 'a')
 
@@ -153,11 +181,25 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         try:
             if stringInfo[0] == 'REGISTER':
                 if 'Digest' not in stringInfo:
-                    logEvent(file, 'Sent to ' \
-                    + self.client_address[0] \
-                    + ':' + str(self.client_address[1]) + ': ' \
-                    + "SIP/2.0 401 Unauthorized\r\n\r\n")
-                    self.wfile.write(b"SIP/2.0 401 Unauthorized\r\n\r\n")
+                    try:
+                        addrStart = stringInfo[1].find(":") + 1
+                        addrEnd = stringInfo[1].rfind(':')
+                        user = stringInfo[1][addrStart:addrEnd]
+                        userPassword = findUserPassword(user)
+                        nonce = generateNonce(userPassword)
+                        print(nonce)
+
+                    except Exception as e:
+                        print(e)
+                        self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
+                        notfound = True
+
+                    if not notfound:
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + "SIP/2.0 401 Unauthorized\r\n\r\n")
+                        self.wfile.write(b"SIP/2.0 401 Unauthorized\r\n\r\n")
 
                 else:
                     registerUser(stringInfo, SIPRegisterHandler.usersDict, self)

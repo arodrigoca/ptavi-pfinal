@@ -78,6 +78,7 @@ def composeSipMsg(method, config_data, options):
 
     return sipmsg
 
+
 def doClient(config_data, sip_method, option):
     """Main function of the program. It does server-client communication.
 
