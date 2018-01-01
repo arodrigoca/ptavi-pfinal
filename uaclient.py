@@ -125,6 +125,8 @@ def doClient(config_data, sip_method, option):
                         + 'Authorization: Digest response="' \
                         + nonceResponse + '"'
                         LINE = composeSipMsg('REGISTER', config_data, options)
+                        logEvent(file, 'Sent to ' + config_data['regproxy']['ip'] \
+                        + ':' + config_data['regproxy']['port'] + ': ' + LINE)
                         my_socket.send(bytes(LINE, 'utf-8'))
 
                     elif data.decode() == 'SIP/2.0 200 OK\r\n\r\n':
@@ -167,6 +169,9 @@ def doClient(config_data, sip_method, option):
                         break
 
         except (socket.gaierror, ConnectionRefusedError):
+                logEvent(file, 'Error: No server listening at ' \
+                + config_data['regproxy']['ip'] + ' port ' \
+                + config_data['regproxy']['port'])
                 sys.exit('Error: Server not found')
 
 class handleXML(ContentHandler):

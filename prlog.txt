@@ -1,0 +1,93 @@
+20180101154433 Received from 127.0.0.1:38881: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20180101154433 Sent to 127.0.0.1:38881: SIP/2.0 401 Unauthorized
+
+
+20180101154433 Received from 127.0.0.1:38881: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="61dfdaab84195cf25ff2aa131a3b988f:a3f6188500044ed8888e8ef5bd424ade"
+20180101154433 Sent to 127.0.0.1:38881: SIP/2.0 200 OK
+
+
+20180101154547 Received from 127.0.0.1:34339: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20180101154547 Sent to 127.0.0.1:34339: SIP/2.0 401 Unauthorized
+
+
+20180101154547 Received from 127.0.0.1:34339: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="320a08630e14d5597a38ef2b8e590679:3e7cd774a1eb4166b57edcec4097e6cd"
+20180101154547 Sent to 127.0.0.1:34339: SIP/2.0 200 OK
+
+
+20180101154635 Received from 127.0.0.1:35381: INVITE sip:alumno2@urjc.es SIP/2.0
+Content-Type: application/sdp
+
+v=0
+o=alumno1@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23032 RTP
+20180101154635 Sent to 127.0.0.1:35381: SIP/2.0 404 User Not Found
+
+
+20180101154657 Received from 127.0.0.1:51382: BYE sip:alumno2@urjc.es SIP/2.0
+
+20180101154657 Sent to 127.0.0.1:51382: SIP/2.0 400 Bad Request
+
+
+20180101154752 Received from 127.0.0.1:49007: BYE sip:alumno2@urjc.es SIP/2.0
+
+20180101154752 Sent to 127.0.0.1:49007: SIP/2.0 400 Bad Request
+
+
+20180101193922 Received from 127.0.0.1:43826: BYE sip:alumno2@urjc.es SIP/2.0
+
+20180101193922 Sent to 127.0.0.1:43826: SIP/2.0 400 Bad Request
+
+
+20180101193943 Received from 127.0.0.1:37013: BYE sip:alumno2@urjc.es SIP/2.0
+
+20180101193943 Sent to 127.0.0.1:37013: SIP/2.0 400 Bad Request
+
+
+20180101194052 Received from 127.0.0.1:50648: BYE sip:alumno2@urjc.es SIP/2.0
+
+20180101194120 Received from 127.0.0.1:49158: BYE sip:alumno2@urjc.es SIP/2.0
+
+20180101194120 Sent to 127.0.0.1:49158: SIP/2.0 404 User Not Found
+
+
+20180101194126 Received from 127.0.0.1:34800: INVITE sip:alumno2@urjc.es SIP/2.0
+Content-Type: application/sdp
+
+v=0
+o=alumno1@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23032 RTP
+20180101194126 Sent to 127.0.0.1:34800: SIP/2.0 400 Bad Request
+
+
+20180101194136 Received from 127.0.0.1:51213: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20180101194136 Sent to 127.0.0.1:51213: SIP/2.0 401 Unauthorized
+
+
+20180101194136 Received from 127.0.0.1:51213: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="9b009e605c73e155bca75fd8724106d8:74938d564df946eaa92f577d12283f50"
+20180101194136 Sent to 127.0.0.1:51213: SIP/2.0 200 OK
+
+
+20180101194140 Received from 127.0.0.1:40463: INVITE sip:alumno2@urjc.es SIP/2.0
+Content-Type: application/sdp
+
+v=0
+o=alumno1@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23032 RTP
+20180101194140 Sent to 127.0.0.1:40463: SIP/2.0 404 User Not Found
+
+

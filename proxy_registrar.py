@@ -223,7 +223,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
                         else:
                             print('Authentication incorrect')
-                        
+
                         registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
                         logEvent(file, 'Sent to ' \
                         + self.client_address[0] \
@@ -264,6 +264,18 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         + ':' + str(self.client_address[1]) + ': ' \
                         + "SIP/2.0 400 Bad Request\r\n\r\n")
                         self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
+                elif stringInfo[0] == 'BYE':
+                    try:
+                        fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self, file)
+
+                    except KeyError:
+                        print('Requested user not found in database')
+                        logEvent(file, 'Sent to ' \
+                        + self.client_address[0] \
+                        + ':' + str(self.client_address[1]) + ': ' \
+                        + "SIP/2.0 404 User Not Found\r\n\r\n")
+                        self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
+
                 else:
                     fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self, file)
 
