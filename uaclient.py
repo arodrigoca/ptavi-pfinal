@@ -149,6 +149,10 @@ def doClient(config_data, sip_method, option):
                             print('Server error')
                             break
 
+                    elif data.decode() == 'SIP/2.0 403 Forbidden\r\n\r\n':
+                            print('Authentication failed. Try Again')
+                            break
+
                     else:
                         rtpaddress = data.decode()[data.decode().find('o='):]
                         rtpaddress = rtpaddress[rtpaddress.find(' ')+1:]
@@ -208,7 +212,7 @@ if __name__ == "__main__":
         option = sys.argv[3]
 
     except(FileNotFoundError, IndexError, ValueError):
-        sys.exit('Usage: python3 client.py method receiver@IP:SIPport')
+        sys.exit('Usage: python uaclient.py config method option')
 
 
     parser = make_parser()

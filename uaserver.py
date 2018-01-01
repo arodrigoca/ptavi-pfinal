@@ -200,4 +200,4 @@ if __name__ == "__main__":
             sys.exit('Exiting')
 
     except IndexError:
-            sys.exit('Usage: python3 server.py IP port audio_file')
+            sys.exit('Usage: python uaserver.py config')

@@ -220,16 +220,21 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         len(stringMsg)-1]
                         if checkPassword(hashed_password, userPassword):
                             print('Authentication correct')
+                            registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
+                            logEvent(file, 'Sent to ' \
+                            + self.client_address[0] \
+                            + ':' + str(self.client_address[1]) + ': ' \
+                            + "SIP/2.0 200 OK\r\n\r\n")
+                            self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
                         else:
                             print('Authentication incorrect')
+                            logEvent(file, 'Sent to ' \
+                            + self.client_address[0] \
+                            + ':' + str(self.client_address[1]) + ': ' \
+                            + "SIP/2.0  403 Forbidden\r\n\r\n")
+                            self.wfile.write(b'SIP/2.0  403 Forbidden\r\n\r\n')
 
-                        registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + "SIP/2.0 200 OK\r\n\r\n")
-                        self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
                     except Exception as e:
                         print(e)
