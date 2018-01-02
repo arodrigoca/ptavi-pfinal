@@ -37,6 +37,8 @@ pswds_file = config_data['database']['passwords']
 with open(pswds_file, 'r') as f:
     pswds_data = f.read().splitlines()
 
+random_nonce = 898989898798989898989
+
 
 def deleteUser(usersDict, user):
     """DeleteUser method deletes an user from the dictionary.
@@ -133,14 +135,18 @@ def fordwardMessage(stringInfo, usersDict, message, handler, logfile):
 
 def generateNonce(password):
 
-    salt = uuid.uuid4().hex
-    return hashlib.md5(salt.encode() + password.encode()).hexdigest() + ':' + salt
+    #return hashlib.md5(password.encode()).hexdigest()
+    return str(random_nonce)
 
 
 
 def checkPassword(hashed_password, user_password):
-    password, salt = hashed_password.split(':')
-    if password == hashlib.md5(salt.encode() + user_password.encode()).hexdigest():
+
+    cnonce = hashlib.sha1()
+    cnonce.update(str(random_nonce).encode())
+    cnonce.update(user_password.encode())
+    cnonce.hexdigest()
+    if str(cnonce.hexdigest()) == hashed_password:
         return True
 
     else:
@@ -233,7 +239,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                             + self.client_address[0] \
                             + ':' + str(self.client_address[1]) + ': ' \
                             + "SIP/2.0  403 Forbidden\r\n\r\n")
-                            self.wfile.write(b'SIP/2.0  403 Forbidden\r\n\r\n')
+                            self.wfile.write(b'SIP/2.0 403 Forbidden\r\n\r\n')
 
 
                     except Exception as e:

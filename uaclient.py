@@ -83,9 +83,12 @@ def composeSipMsg(method, config_data, options):
 
 def generateNonceResponse(password, nonce):
 
-    salt = uuid.uuid4().hex
-    cnonce = hashlib.md5(salt.encode() + password.encode()).hexdigest() + ':' + salt
-    return hashlib.md5(salt.encode() + password.encode()).hexdigest() + ':' + salt
+    cnonce = hashlib.sha1()
+    cnonce.update(nonce.encode())
+    cnonce.update(password.encode())
+    cnonce.hexdigest()
+    print(cnonce.hexdigest())
+    return cnonce.hexdigest()
 
 
 def doClient(config_data, sip_method, option):

@@ -3,12 +3,11 @@ import hashlib
 
 def hash_password(password):
     # uuid is used to generate a random number
-    salt = uuid.uuid4().hex
-    return hashlib.md5(salt.encode() + password.encode()).hexdigest() + ':' + salt
+    return hashlib.md5(password.encode()).hexdigest()
 
 def check_password(hashed_password, user_password):
-    password, salt = hashed_password.split(':')
-    return password == hashlib.md5(salt.encode() + user_password.encode()).hexdigest()
+    password = hashed_password.split(':')
+    return password == hashlib.md5(user_password.encode()).hexdigest()
 
 new_pass = input('Please enter a password: ')
 hashed_password = hash_password(new_pass)
