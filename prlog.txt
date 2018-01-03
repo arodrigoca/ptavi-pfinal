@@ -1,0 +1,62 @@
+20180103131215 Received from 127.0.0.1:60794: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20180103131215 Sent to 127.0.0.1:60794: SIP/2.0 401 Unauthorized
+
+
+20180103131215 Received from 127.0.0.1:60794: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="6028f2f95c42831ba969e6b85e9c211016ffa6b5"
+20180103131215 Sent to 127.0.0.1:60794: SIP/2.0 200 OK
+
+
+20180103131229 Received from 127.0.0.1:34677: INVITE sip:alumno2@urjc.es SIP/2.0
+Content-Type: application/sdp
+
+v=0
+o=alumno1@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23032 RTP
+20180103131229 Sent to 127.0.0.1:3002: INVITE sip:alumno2@urjc.es SIP/2.0
+Content-Type: application/sdp
+
+v=0
+o=alumno1@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23032 RTP
+20180103131229 Sent to 127.0.0.1:34677: SIP/2.0 400 Bad Request
+
+
+20180103131253 Received from 127.0.0.1:55238: INVITE sip:alumno2@urjc.es SIP/2.0
+Content-Type: application/sdp
+
+v=0
+o=alumno1@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23032 RTP
+20180103131253 Sent to 127.0.0.1:3002: INVITE sip:alumno2@urjc.es SIP/2.0
+Content-Type: application/sdp
+
+v=0
+o=alumno1@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23032 RTP
+20180103131253 Received from 127.0.0.1:3002: SIP/2.0 100 Trying
+
+SIP/2.0 180 Ringing
+
+SIP/2.0 200 OK
+Content-Type: application/sdp
+
+v=0
+o=alumno2@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23033 RTP
+20180103131253 Received from 127.0.0.1:55238: ACK sip:alumno2@urjc.es SIP/2.0
+
+20180103131253 Sent to 127.0.0.1:3002: ACK sip:alumno2@urjc.es SIP/2.0
+

@@ -11,29 +11,30 @@ import datetime
 import uuid
 import hashlib
 
-tags = {'account':['username', 'passwd'],
-'uaserver':['ip', 'port'],
-'rtpaudio':['port'],
-'regproxy':['ip', 'port'],
-'log':['path'],
-'audio':['path']
-}
+tags = {'account': ['username', 'passwd'],
+        'uaserver': ['ip', 'port'],
+        'rtpaudio': ['port'],
+        'regproxy': ['ip', 'port'],
+        'log': ['path'],
+        'audio': ['path']
+        }
 
 sipmethods = ['REGISTER',
-'INVITE',
-'ACK',
-'BYE'
-]
+              'INVITE',
+              'ACK',
+              'BYE'
+              ]
 
 sipresponses = ['100',
-'190',
-'200',
-'400'
-]
+                '190',
+                '200',
+                '400'
+                ]
+
 
 def logEvent(file, line):
 
-    #print('printing to log file:', line)
+    # print('printing to log file:', line)
     eventTime = datetime.datetime.today().strftime('%Y%m%d%H%M%S')
     file.write(eventTime + ' ' + line + '\r\n')
 
@@ -45,10 +46,11 @@ def sendSong(song, receiver_address):
 
     """
     command = './mp32rtp -i ' + receiver_address[0] \
-    + '-p ' + str(receiver_address[1])
+        + '-p ' + str(receiver_address[1])
     command += ' < ' + song
     print(command)
     os.system(command)
+
 
 def composeSipMsg(method, config_data, options):
     """composeSipMsg creates a good formatted SIP message.
@@ -59,18 +61,18 @@ def composeSipMsg(method, config_data, options):
 
     if method == 'REGISTER':
         sipmsg = method + " " + "sip:" + config_data['account']['username'] \
-        + ':' + config_data['uaserver']['port'] \
-        + ' ' + "SIP/2.0\r\n" + 'Expires: ' + options
+            + ':' + config_data['uaserver']['port'] \
+            + ' ' + "SIP/2.0\r\n" + 'Expires: ' + options
 
     elif method == 'INVITE':
         sipmsg = method + " " + "sip:" + options + ' ' + "SIP/2.0\r\n" \
-        + 'Content-Type: application/sdp\r\n\r\n' \
-        + 'v=0\r\n' \
-        + 'o=' + config_data['account']['username'] + ' ' \
-        + config_data['uaserver']['ip'] + '\r\n' \
-        + 's=mysession\r\n' \
-        + 't=0\r\n' \
-        + 'm=audio ' + config_data['rtpaudio']['port'] + ' ' + 'RTP'
+            + 'Content-Type: application/sdp\r\n\r\n' \
+            + 'v=0\r\n' \
+            + 'o=' + config_data['account']['username'] + ' ' \
+            + config_data['uaserver']['ip'] + '\r\n' \
+            + 's=mysession\r\n' \
+            + 't=0\r\n' \
+            + 'm=audio ' + config_data['rtpaudio']['port'] + ' ' + 'RTP'
 
     elif method == 'BYE':
         sipmsg = method + " " + "sip:" + options + ' ' + "SIP/2.0\r\n"
@@ -101,34 +103,38 @@ def doClient(config_data, sip_method, option):
         try:
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             my_socket.connect((config_data['regproxy']['ip'],
-            int(config_data['regproxy']['port'])))
-            #print(my_socket.getsockname())
+                              int(config_data['regproxy']['port'])))
+            # print(my_socket.getsockname())
             LINE = composeSipMsg(sip_method, config_data, option)
             print("Sending: " + LINE)
             my_socket.send(bytes(LINE, 'utf-8'))
-            logEvent(file, 'Sent to ' + config_data['regproxy']['ip'] \
-            + ':' + config_data['regproxy']['port'] + ': ' + LINE)
+            logEvent(file, 'Sent to ' + config_data['regproxy']['ip'] +
+                     ':' + config_data['regproxy']['port'] + ': ' + LINE)
             while True:
                 data = my_socket.recv(1024)
                 if data:
                     print('received -- ', data.decode('utf-8'))
-                    logEvent(file, 'Received from ' + config_data['regproxy']['ip'] \
-                    + ':' + config_data['regproxy']['port'] + ': ' \
-                     + data.decode())
+                    logEvent(file, 'Received from ' +
+                             config_data['regproxy']['ip'] +
+                             ':' + config_data['regproxy']['port'] + ': ' +
+                             data.decode())
                     okline = 'SIP/2.0 401 Unauthorized\r\n'
                     if okline in data.decode():
                         nonceIndex = data.decode().find('nonce=')
-                        hashed_password = data.decode()[nonceIndex+7: \
-                        len(data.decode())-1]
+                        hashed_password = data.decode()[nonceIndex+7:
+                                                        len(data.decode())-1]
                         nonceResponse = \
-                        generateNonceResponse(config_data['account']['passwd'],
-                        hashed_password)
+                            generateNonceResponse(
+                                        config_data['account']['passwd'],
+                                        hashed_password)
                         options = option + '\r\n' \
-                        + 'Authorization: Digest response="' \
-                        + nonceResponse + '"'
+                            + 'Authorization: Digest response="' \
+                            + nonceResponse + '"'
                         LINE = composeSipMsg('REGISTER', config_data, options)
-                        logEvent(file, 'Sent to ' + config_data['regproxy']['ip'] \
-                        + ':' + config_data['regproxy']['port'] + ': ' + LINE)
+                        logEvent(file, 'Sent to ' +
+                                 config_data['regproxy']['ip'] +
+                                 ':' + config_data['regproxy']['port'] +
+                                 ': ' + LINE)
                         my_socket.send(bytes(LINE, 'utf-8'))
 
                     elif data.decode() == 'SIP/2.0 200 OK\r\n\r\n':
@@ -139,7 +145,8 @@ def doClient(config_data, sip_method, option):
                             print('User not found')
                             break
 
-                    elif data.decode() == 'SIP/2.0 405 Method Not Allowed\r\n\r\n':
+                    elif data.decode() == \
+                            'SIP/2.0 405 Method Not Allowed\r\n\r\n':
                             print('User not found')
                             break
 
@@ -147,7 +154,8 @@ def doClient(config_data, sip_method, option):
                             print('Bad Request')
                             break
 
-                    elif data.decode == 'SIP/2.0 500 Server Internal Error\r\n\r\n':
+                    elif data.decode == \
+                            'SIP/2.0 500 Server Internal Error\r\n\r\n':
                             print('Server error')
                             break
 
@@ -166,19 +174,25 @@ def doClient(config_data, sip_method, option):
                         rtpaddress = [rtpaddress, rtpport]
                         LINE = composeSipMsg('ACK', config_data, option)
                         my_socket.send(bytes(LINE, 'utf-8'))
-                        logEvent(file, 'Sent to ' + config_data['regproxy']['ip'] \
-                        + ':' + config_data['regproxy']['port'] + ': ' + LINE)
+                        logEvent(file, 'Sent to ' +
+                                 config_data['regproxy']['ip'] +
+                                 ':' + config_data['regproxy']['port'] +
+                                 ': ' + LINE)
                         sendSong(config_data['audio']['path'], rtpaddress)
-                        logEvent(file, 'Sent to ' + rtpaddress[0] \
-                        + ':' + rtpaddress[1] + ': ' + 'RTP FILE')
+                        logEvent(file, 'Sent to ' + rtpaddress[0] +
+                                 ':' + rtpaddress[1] + ': ' + 'RTP FILE')
                         print('All OK. Sending ACK and RTP')
                         break
 
         except (socket.gaierror, ConnectionRefusedError):
-                logEvent(file, 'Error: No server listening at ' \
-                + config_data['regproxy']['ip'] + ' port ' \
-                + config_data['regproxy']['port'])
-                sys.exit('Error: Server not found')
+                logEvent(file, 'Error: No server listening at ' +
+                         config_data['regproxy']['ip'] + ' port ' +
+                         config_data['regproxy']['port'])
+                sys.exit(datetime.datetime.today().strftime('%Y%m%d%H%M%S') +
+                         ' Error: No server listening at ' +
+                         config_data['regproxy']['ip'] + ' port ' +
+                         config_data['regproxy']['port'])
+
 
 class handleXML(ContentHandler):
 
@@ -198,7 +212,6 @@ class handleXML(ContentHandler):
                 attdict[attrib] = toAppend
                 self.XML[name] = attdict
 
-
     def get_tags(self):
 
         tags = self.XML
@@ -215,7 +228,6 @@ if __name__ == "__main__":
 
     except(FileNotFoundError, IndexError, ValueError):
         sys.exit('Usage: python uaclient.py config method option')
-
 
     parser = make_parser()
     cHandler = handleXML(tags)
