@@ -13,13 +13,13 @@ from uaclient import logEvent
 import socket
 import datetime
 
-tags = {'account':['username', 'passwd'],
-'uaserver':['ip', 'port'],
-'rtpaudio':['port'],
-'regproxy':['ip', 'port'],
-'log':['path'],
-'audio':['path']
-}
+tags = {'account': ['username', 'passwd'],
+        'uaserver': ['ip', 'port'],
+        'rtpaudio': ['port'],
+        'regproxy': ['ip', 'port'],
+        'log': ['path'],
+        'audio': ['path']
+        }
 
 config_file = sys.argv[1]
 parser = make_parser()
@@ -34,8 +34,6 @@ except:
     print('log file not found')
 
 rtpaddress = []
-
-
 
 
 def composeSipAnswer(method, address):
@@ -76,18 +74,20 @@ def checkClientMessage(msg):
         msgInfo = ['BAD REQUEST', msg[0]]
         return msgInfo
 
+
 def SDP():
 
     sipmsg = 'SIP/2.0 200 OK\r\n' \
-    + 'Content-Type: application/sdp\r\n\r\n' \
-    + 'v=0\r\n' \
-    + 'o=' + config_data['account']['username'] + ' ' \
-    + config_data['uaserver']['ip'] + '\r\n' \
-    + 's=mysession\r\n' \
-    + 't=0\r\n' \
-    + 'm=audio ' + config_data['rtpaudio']['port'] + ' ' + 'RTP'
+             + 'Content-Type: application/sdp\r\n\r\n' \
+             + 'v=0\r\n' \
+             + 'o=' + config_data['account']['username'] + ' ' \
+             + config_data['uaserver']['ip'] + '\r\n' \
+             + 's=mysession\r\n' \
+             + 't=0\r\n' \
+             + 'm=audio ' + config_data['rtpaudio']['port'] + ' ' + 'RTP'
 
     return sipmsg
+
 
 def getRTPaddress(message):
 
@@ -112,27 +112,27 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
             if line:
 
                 print("user sent " + line.decode('utf-8'))
-                logEvent(file, 'Received from ' \
-                + self.client_address[0] \
-                + ':' + str(self.client_address[1]) + ': ' \
-                + line.decode())
+                logEvent(file, 'Received from ' +
+                         self.client_address[0] +
+                         ':' + str(self.client_address[1]) + ': ' +
+                         line.decode())
                 checkClientMessage(line.decode('utf-8'))
                 if checkClientMessage(line.decode('utf-8'))[0] == 'OK':
 
                     if checkClientMessage(line.decode('utf-8'))[1] == 'ACK':
-                        logEvent(file, 'Sent to ' \
-                        + rtpaddress[0] \
-                        + ':' + str(rtpaddress[1]) + ': ' \
-                        + 'RTP FILE')
+                        logEvent(file, 'Sent to ' +
+                                 rtpaddress[0] +
+                                 ':' + str(rtpaddress[1]) + ': ' +
+                                 'RTP FILE')
                         sendSong(config_data['audio']['path'], rtpaddress)
 
                     elif checkClientMessage(line.decode('utf-8'))[1] == 'BYE':
                         LINE = (composeSipAnswer('SIP/2.0 200 OK',
                                 self.client_address) + '\r\n\r\n').encode()
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + LINE.decode())
+                        logEvent(file, 'Sent to ' +
+                                 self.client_address[0] +
+                                 ':' + str(self.client_address[1]) + ': ' +
+                                 LINE.decode())
                         self.wfile.write(LINE)
 
                     else:
@@ -143,23 +143,23 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         rtpaddress = [rtpip, rtpport]
                         LINE = (composeSipAnswer('SIP/2.0 100 Trying',
                                 self.client_address) + '\r\n\r\n').encode()
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + LINE.decode())
+                        logEvent(file, 'Sent to ' +
+                                 self.client_address[0] +
+                                 ':' + str(self.client_address[1]) + ': ' +
+                                 LINE.decode())
                         self.wfile.write(LINE)
                         LINE = (composeSipAnswer('SIP/2.0 180 Ringing',
                                 self.client_address) + '\r\n\r\n').encode()
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + LINE.decode())
+                        logEvent(file, 'Sent to ' +
+                                 self.client_address[0] +
+                                 ':' + str(self.client_address[1]) + ': ' +
+                                 LINE.decode())
                         self.wfile.write(LINE)
                         LINE = SDP().encode()
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + LINE.decode())
+                        logEvent(file, 'Sent to ' +
+                                 self.client_address[0] +
+                                 ':' + str(self.client_address[1]) + ': ' +
+                                 LINE.decode())
                         self.wfile.write(LINE)
 
                 elif checkClientMessage(line.decode('utf-8'))[0]\
@@ -167,20 +167,20 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     print('METHOD NOT ALLOWED')
                     LINE = (composeSipAnswer('405 METHOD NOT ALLOWED',
                             self.client_address) + '\r\n').encode()
-                    logEvent(file, 'Sent to ' \
-                    + self.client_address[0] \
-                    + ':' + str(self.client_address[1]) + ': ' \
-                    + LINE.decode())
+                    logEvent(file, 'Sent to ' +
+                             self.client_address[0] +
+                             ':' + str(self.client_address[1]) + ': ' +
+                             LINE.decode())
                     self.wfile.write(LINE)
 
                 else:
                     print('BAD REQUEST')
                     LINE = (composeSipAnswer('400 BAD REQUEST',
                             self.client_address) + '\r\n').encode()
-                    logEvent(file, 'Sent to ' \
-                    + self.client_address[0] \
-                    + ':' + str(self.client_address[1]) + ': ' \
-                    + LINE.decode())
+                    logEvent(file, 'Sent to ' +
+                             self.client_address[0] +
+                             ':' + str(self.client_address[1]) + ': ' +
+                             LINE.decode())
                     self.wfile.write(LINE)
             # Si no hay más líneas salimos del bucle infinito
             if not line:
@@ -191,7 +191,8 @@ if __name__ == "__main__":
     # Creamos servidor de eco y escuchamos
     try:
 
-        serv = socketserver.UDPServer(('', int(config_data['uaserver']['port'])),
+        serv = socketserver.UDPServer(('',
+                                      int(config_data['uaserver']['port'])),
                                       SIPRegisterHandler)
         print("Listening..." + '\r\n')
         serv.serve_forever()

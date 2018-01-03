@@ -65,3 +65,62 @@ m=audio 23033 RTP
 20180103131253 Sent to 127.0.0.1:5001: ACK sip:alumno2@urjc.es SIP/2.0
 
 20180103131253 Sent to 127.0.0.1:23033: RTP FILE
+20180103132743 Starting...
+20180103132743 Sent to 127.0.0.1:5001: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+20180103132743 Received from 127.0.0.1:5001: SIP/2.0 401 Unauthorized
+WWW Authenticate: Digest nonce="197844755970037634138"
+20180103132743 Sent to 127.0.0.1:5001: REGISTER sip:alumno1@urjc.es:3001 SIP/2.0
+Expires: 3600
+Authorization: Digest response="eff328f88a3e53119d5a2c623d48849ffcf590e1"
+20180103132743 Received from 127.0.0.1:5001: SIP/2.0 200 OK
+
+
+20180103132807 Starting...
+20180103132807 Sent to 127.0.0.1:5001: INVITE sip:alumno2@urjc.es SIP/2.0
+Content-Type: application/sdp
+
+v=0
+o=alumno1@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23032 RTP
+20180103132807 Received from 127.0.0.1:5001: SIP/2.0 100 Trying
+
+SIP/2.0 180 Ringing
+
+SIP/2.0 200 OK
+Content-Type: application/sdp
+
+v=0
+o=alumno2@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23033 RTP
+20180103132807 Sent to 127.0.0.1:5001: ACK sip:alumno2@urjc.es SIP/2.0
+
+20180103132807 Sent to 127.0.0.1:23033: RTP FILE
+20180103133126 Starting...
+20180103133126 Sent to 127.0.0.1:5001: INVITE sip:alumno2@urjc.es SIP/2.0
+Content-Type: application/sdp
+
+v=0
+o=alumno1@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23032 RTP
+20180103133126 Received from 127.0.0.1:5001: SIP/2.0 100 Trying
+
+SIP/2.0 180 Ringing
+
+SIP/2.0 200 OK
+Content-Type: application/sdp
+
+v=0
+o=alumno2@urjc.es 127.0.0.1
+s=mysession
+t=0
+m=audio 23033 RTP
+20180103133126 Sent to 127.0.0.1:5001: ACK sip:alumno2@urjc.es SIP/2.0
+
+20180103133126 Sent to 127.0.0.1:23033: RTP FILE

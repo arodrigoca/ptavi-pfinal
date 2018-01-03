@@ -20,9 +20,9 @@ from random import randint
 scheduler = sched.scheduler(time.time, time.sleep)
 
 tags = {'server': ['servername', 'ip', 'port'],
-'database': ['users', 'passwords'],
-'log': ['path']
-}
+        'database': ['users', 'passwords'],
+        'log': ['path']
+        }
 
 requests = ['INVITE', 'BYE', 'ACK']
 responses = ['100', '180', '200', '404', '500', '401', '405']
@@ -117,21 +117,17 @@ def fordwardMessage(stringInfo, usersDict, message, handler, logfile):
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect((ip, port))
     my_socket.send(bytes(message, 'utf-8'))
-    logEvent(logfile, 'Sent to ' \
-    + ip \
-    + ':' + str(port) + ': ' \
-    + message)
+    logEvent(logfile, 'Sent to ' +
+             ip + ':' + str(port) + ': ' + message)
     if stringInfo[0] != 'ACK':
         while True:
             data = my_socket.recv(1024)
             if data:
-                logEvent(logfile, 'Received from ' \
-                + ip \
-                + ':' + str(port) + ': ' \
-                + data.decode())
+                logEvent(logfile, 'Received from ' + ip +
+                         ':' + str(port) + ': ' +
+                         data.decode())
                 handler.wfile.write(data)
                 break
-
 
 
 def generateNonce(password):
@@ -142,8 +138,6 @@ def generateNonce(password):
     global random_nonce
     random_nonce = nonce
     return str(nonce)
-    #return str(random_nonce2)
-
 
 
 def checkPassword(hashed_password, user_password):
@@ -160,6 +154,7 @@ def checkPassword(hashed_password, user_password):
 
     else:
         return False
+
 
 def findUserPassword(user):
 
@@ -193,10 +188,10 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
             sys.exit('Log file not found. Finishing...')
             self.wfile.write(b'SIP/2.0 500 Server Internal Error')
 
-        logEvent(file, 'Received from ' \
-        + self.client_address[0] \
-        + ':' + str(self.client_address[1]) + ': ' \
-        + stringMsg)
+        logEvent(file, 'Received from ' +
+                 self.client_address[0] +
+                 ':' + str(self.client_address[1]) + ': ' +
+                 stringMsg)
         try:
             if stringInfo[0] == 'REGISTER':
                 if 'Digest' not in stringInfo:
@@ -208,11 +203,12 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         nonce = generateNonce(userPassword)
                     except Exception as e:
                         print(e)
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + "SIP/2.0 404 User Not Found\r\n\r\n")
-                        self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
+                        logEvent(file, 'Sent to ' +
+                                 self.client_address[0] +
+                                 ':' + str(self.client_address[1]) + ': ' +
+                                 "SIP/2.0 404 User Not Found\r\n\r\n")
+                                 self.wfile.write(
+                                 b'SIP/2.0 404 User Not Found\r\n\r\n')
                         notfound = True
 
                     if not notfound:
