@@ -207,18 +207,19 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                                  self.client_address[0] +
                                  ':' + str(self.client_address[1]) + ': ' +
                                  "SIP/2.0 404 User Not Found\r\n\r\n")
-                                 self.wfile.write(
-                                 b'SIP/2.0 404 User Not Found\r\n\r\n')
+                        l = 'SIP/2.0 404 User Not Found\r\n\r\n'
+                        self.wfile.write(l.encode())
                         notfound = True
 
                     if not notfound:
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + "SIP/2.0 401 Unauthorized\r\n\r\n")
-                        self.wfile.write(("SIP/2.0 401 Unauthorized\r\n" \
-                        + 'WWW Authenticate: Digest nonce=' + '"' \
-                        + nonce + '"').encode())
+                        logEvent(file, 'Sent to ' +
+                                 self.client_address[0] +
+                                 ':' + str(self.client_address[1]) + ': ' +
+                                 "SIP/2.0 401 Unauthorized\r\n\r\n")
+                        self.wfile.write(("SIP/2.0 401 Unauthorized\r\n" +
+                                          'WWW Authenticate: Digest nonce=' +
+                                          '"' +
+                                          nonce + '"').encode())
 
                 else:
                     try:
@@ -227,32 +228,33 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         user = stringInfo[1][addrStart:addrEnd]
                         userPassword = findUserPassword(user)
                         nonceIndex = stringMsg.find('response=')
-                        hashed_password = stringMsg[nonceIndex+10: \
-                        len(stringMsg)-1]
+                        hashed_password = stringMsg[nonceIndex+10:
+                                                    len(stringMsg)-1]
                         if checkPassword(hashed_password, userPassword):
                             print('Authentication correct')
-                            registerUser(stringInfo, SIPRegisterHandler.usersDict, self)
-                            logEvent(file, 'Sent to ' \
-                            + self.client_address[0] \
-                            + ':' + str(self.client_address[1]) + ': ' \
-                            + "SIP/2.0 200 OK\r\n\r\n")
+                            registerUser(stringInfo,
+                                         SIPRegisterHandler.usersDict,
+                                         self)
+                            logEvent(file, 'Sent to ' +
+                                     self.client_address[0] +
+                                     ':' + str(self.client_address[1]) + ': ' +
+                                     "SIP/2.0 200 OK\r\n\r\n")
                             self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
 
                         else:
                             print('Authentication incorrect')
-                            logEvent(file, 'Sent to ' \
-                            + self.client_address[0] \
-                            + ':' + str(self.client_address[1]) + ': ' \
-                            + "SIP/2.0  403 Forbidden\r\n\r\n")
+                            logEvent(file, 'Sent to ' +
+                                     self.client_address[0] +
+                                     ':' + str(self.client_address[1]) + ': ' +
+                                     "SIP/2.0  403 Forbidden\r\n\r\n")
                             self.wfile.write(b'SIP/2.0 403 Forbidden\r\n\r\n')
-
 
                     except Exception as e:
                         print(e)
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + "SIP/2.0 404 User Not Found\r\n\r\n")
+                        logEvent(file, 'Sent to ' +
+                                 self.client_address[0] +
+                                 ':' + str(self.client_address[1]) + ': ' +
+                                 "SIP/2.0 404 User Not Found\r\n\r\n")
                         self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
 
             elif stringInfo[0] in requests:
@@ -263,57 +265,63 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     if origUser in SIPRegisterHandler.usersDict:
                         print('origin user in in database!')
                         try:
-                            fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self, file)
+                            fordwardMessage(stringInfo,
+                                            SIPRegisterHandler.usersDict,
+                                            stringMsg, self, file)
 
                         except KeyError:
                             print('Requested user not found in database')
-                            logEvent(file, 'Sent to ' \
-                            + self.client_address[0] \
-                            + ':' + str(self.client_address[1]) + ': ' \
-                            + "SIP/2.0 404 User Not Found\r\n\r\n")
-                            self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
+                            logEvent(file, 'Sent to ' +
+                                     self.client_address[0] +
+                                     ':' + str(self.client_address[1]) + ': ' +
+                                     "SIP/2.0 404 User Not Found\r\n\r\n")
+                            l = 'SIP/2.0 404 User Not Found\r\n\r\n'
+                            self.wfile.write(l.encode())
 
                     else:
                         print('origin user not in database!')
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + "SIP/2.0 400 Bad Request\r\n\r\n")
+                        logEvent(file, 'Sent to ' +
+                                 self.client_address[0] +
+                                 ':' + str(self.client_address[1]) + ': ' +
+                                 "SIP/2.0 400 Bad Request\r\n\r\n")
                         self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
                 elif stringInfo[0] == 'BYE':
                     try:
-                        fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self, file)
+                        fordwardMessage(stringInfo,
+                                        SIPRegisterHandler.usersDict,
+                                        stringMsg, self, file)
 
                     except KeyError:
                         print('Requested user not found in database')
-                        logEvent(file, 'Sent to ' \
-                        + self.client_address[0] \
-                        + ':' + str(self.client_address[1]) + ': ' \
-                        + "SIP/2.0 404 User Not Found\r\n\r\n")
+                        logEvent(file, 'Sent to ' +
+                                 self.client_address[0] +
+                                 ':' + str(self.client_address[1]) + ': ' +
+                                 "SIP/2.0 404 User Not Found\r\n\r\n")
                         self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
 
                 else:
-                    fordwardMessage(stringInfo, SIPRegisterHandler.usersDict, stringMsg, self, file)
+                    fordwardMessage(stringInfo, SIPRegisterHandler.usersDict,
+                                    stringMsg, self, file)
 
             else:
-                logEvent(file, 'Sent to ' \
-                + self.client_address[0] \
-                + ':' + str(self.client_address[1]) + ': ' \
-                + "SIP/2.0 405 Method Not Allowed\r\n\r\n")
+                logEvent(file, 'Sent to ' +
+                         self.client_address[0] +
+                         ':' + str(self.client_address[1]) + ': ' +
+                         "SIP/2.0 405 Method Not Allowed\r\n\r\n")
                 self.wfile.write(b"SIP/2.0 405 Method Not Allowed\r\n\r\n")
         except Exception as e:
                 if e == '[Errno 111] Connection refused':
-                    logEvent(file, 'Sent to ' \
-                    + self.client_address[0] \
-                    + ':' + str(self.client_address[1]) + ': ' \
-                    + "SIP/2.0 404 User Not Found\r\n\r\n")
+                    logEvent(file, 'Sent to ' +
+                             self.client_address[0] +
+                             ':' + str(self.client_address[1]) + ': ' +
+                             "SIP/2.0 404 User Not Found\r\n\r\n")
                     self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
 
                 else:
-                    logEvent(file, 'Sent to ' \
-                    + self.client_address[0] \
-                    + ':' + str(self.client_address[1]) + ': ' \
-                    + "SIP/2.0 400 Bad Request\r\n\r\n")
+                    logEvent(file, 'Sent to ' +
+                             self.client_address[0] +
+                             ':' + str(self.client_address[1]) + ': ' +
+                             "SIP/2.0 400 Bad Request\r\n\r\n")
                     self.wfile.write(b"SIP/2.0 400 Bad Request\r\n\r\n")
                     print("Server error:", e)
 
@@ -355,8 +363,8 @@ if __name__ == "__main__":
         serv = socketserver.UDPServer(('', int(config_data['server']['port'])),
                                       SIPRegisterHandler)
         SIPRegisterHandler.json2registered()
-        print("Server " + config_data['server']['servername']
-        + ' listening at port ' + config_data['server']['port'])
+        print("Server " + config_data['server']['servername'] +
+              ' listening at port ' + config_data['server']['port'])
         serv.serve_forever()
     except(KeyboardInterrupt, IndexError):
         print("Usage: python proxy_registrar.py config")
