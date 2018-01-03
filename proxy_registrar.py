@@ -15,6 +15,7 @@ from uaclient import logEvent
 import socket
 import uuid
 import hashlib
+from random import randint
 
 scheduler = sched.scheduler(time.time, time.sleep)
 
@@ -135,17 +136,25 @@ def fordwardMessage(stringInfo, usersDict, message, handler, logfile):
 
 def generateNonce(password):
 
-    #return hashlib.md5(password.encode()).hexdigest()
-    return str(random_nonce)
+    range_start = 10**(21-1)
+    range_end = (10**21)-1
+    nonce = randint(range_start, range_end)
+    global random_nonce
+    random_nonce = nonce
+    return str(nonce)
+    #return str(random_nonce2)
 
 
 
 def checkPassword(hashed_password, user_password):
 
+    print(random_nonce, 'is the random nonce')
     cnonce = hashlib.sha1()
     cnonce.update(str(random_nonce).encode())
     cnonce.update(user_password.encode())
     cnonce.hexdigest()
+    print(cnonce.hexdigest(), 'is my cnonce digest')
+    print(hashed_password, 'is received cnonce digest')
     if str(cnonce.hexdigest()) == hashed_password:
         return True
 

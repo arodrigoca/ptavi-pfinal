@@ -87,7 +87,6 @@ def generateNonceResponse(password, nonce):
     cnonce.update(nonce.encode())
     cnonce.update(password.encode())
     cnonce.hexdigest()
-    print(cnonce.hexdigest())
     return cnonce.hexdigest()
 
 
