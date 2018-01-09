@@ -123,7 +123,7 @@ for filename in student_file_list:
         error_ficheros = 1
         print "Error: " + filename + " no encontrado. Tienes que subirlo al repositorio."
         print
-    if ".libpcap" in filename:
+    '''if ".libpcap" in filename:
         output = subprocess.Popen(["tshark", "-r", "/tmp/" + aleatorio + "/" + filename], stdout=subprocess.PIPE)
         output2 = subprocess.Popen(["wc"], stdin=output.stdout, stdout=subprocess.PIPE)
         lines = output2.communicate()[0].split()[0]
@@ -135,6 +135,7 @@ for filename in student_file_list:
             print "Aviso: La captura realizada y guardada en " + filename + " contiene más de 50 paquetes."
             print "       Probablemente no esté filtrada convenientemente."
             print
+    '''
 
 if error_ficheros:
     print

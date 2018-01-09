@@ -1,0 +1,2 @@
+Reestablecer usuarios conectados
+Consistencia frente a valores erróneos
