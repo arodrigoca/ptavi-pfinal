@@ -219,7 +219,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         self.wfile.write(("SIP/2.0 401 Unauthorized\r\n" +
                                           'WWW Authenticate: Digest nonce=' +
                                           '"' +
-                                          nonce + '"').encode())
+                                          nonce + '"' + '\r\n\r\n').encode())
 
                 else:
                     try:
@@ -229,7 +229,8 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                         userPassword = findUserPassword(user)
                         nonceIndex = stringMsg.find('response=')
                         hashed_password = stringMsg[nonceIndex+10:
-                                                    len(stringMsg)-1]
+                                                    len(stringMsg)-5]
+                        print('RECEIVED NONCE:', hashed_password)
                         if checkPassword(hashed_password, userPassword):
                             print('Authentication correct')
                             registerUser(stringInfo,

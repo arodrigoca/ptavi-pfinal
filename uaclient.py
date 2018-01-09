@@ -46,7 +46,7 @@ def sendSong(song, receiver_address):
 
     """
     command = './mp32rtp -i ' + receiver_address[0] \
-        + '-p ' + str(receiver_address[1])
+        + ' -p ' + str(receiver_address[1])
     command += ' < ' + song
     print(command)
     os.system(command)
@@ -62,7 +62,7 @@ def composeSipMsg(method, config_data, options):
     if method == 'REGISTER':
         sipmsg = method + " " + "sip:" + config_data['account']['username'] \
             + ':' + config_data['uaserver']['port'] \
-            + ' ' + "SIP/2.0\r\n" + 'Expires: ' + options
+            + ' ' + "SIP/2.0\r\n" + 'Expires: ' + options + '\r\n\r\n'
 
     elif method == 'INVITE':
         sipmsg = method + " " + "sip:" + options + ' ' + "SIP/2.0\r\n" \
@@ -122,7 +122,8 @@ def doClient(config_data, sip_method, option):
                     if okline in data.decode():
                         nonceIndex = data.decode().find('nonce=')
                         hashed_password = data.decode()[nonceIndex+7:
-                                                        len(data.decode())-1]
+                                                        len(data.decode())-5]
+                        print('server nonce is: ' + hashed_password)
                         nonceResponse = \
                             generateNonceResponse(
                                         config_data['account']['passwd'],
@@ -135,6 +136,7 @@ def doClient(config_data, sip_method, option):
                                  config_data['regproxy']['ip'] +
                                  ':' + config_data['regproxy']['port'] +
                                  ': ' + LINE)
+                        print('auth message: ', LINE)
                         my_socket.send(bytes(LINE, 'utf-8'))
 
                     elif data.decode() == 'SIP/2.0 200 OK\r\n\r\n':
